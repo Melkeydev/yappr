@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  db:
+    container_name: "goChatDB"
+    image: postgres:14-alpine
+    volumes:
+      - "./database/postgres-data:/var/lib/postgresql/data:rw"
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: "go_chat_db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    restart: unless-stopped
