@@ -7,10 +7,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
+	corehandler "github.com/melkeydev/chat-go/internal/api/handler/core"
 	userhandler "github.com/melkeydev/chat-go/internal/api/handler/user"
 )
 
-func SetupRouter(userH *userhandler.UserHandler) http.Handler {
+func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -30,6 +31,13 @@ func SetupRouter(userH *userhandler.UserHandler) http.Handler {
 		u.Post("/signup", userH.CreateUser)
 		u.Post("/login", userH.Login)
 		u.Get("/logout", userH.Logout)
+	})
+
+	r.Route("/ws", func(u chi.Router) {
+		u.Post("/createRoom", coreH.CreateRoom)
+		u.Get("/joinRoom/{roomId}", coreH.JoinRoom)
+		u.Get("/getRooms", coreH.GetRooms)
+		u.Get("/getClients/{roomId}", coreH.GetClients)
 	})
 
 	// simple health
