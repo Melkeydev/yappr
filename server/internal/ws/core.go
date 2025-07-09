@@ -4,6 +4,7 @@ type Room struct {
 	ID      string             `json:"id"`
 	Name    string             `json:"name"`
 	Clients map[string]*Client `json:"clients"`
+	History []*Message
 }
 
 type Core struct {
@@ -27,12 +28,16 @@ func (c *Core) Run() {
 	for {
 		select {
 		case cl := <-c.Register:
-			if _, ok := c.Rooms[cl.RoomID]; ok {
-				r := c.Rooms[cl.RoomID]
-
-				if _, ok := r.Clients[cl.ID]; !ok {
-					r.Clients[cl.ID] = cl
+			if room, ok := c.Rooms[cl.RoomID]; ok {
+				if _, ok := room.Clients[cl.ID]; !ok {
+					room.Clients[cl.ID] = cl
 				}
+				// replay
+				go func(h []*Message) {
+					for _, m := range h {
+						cl.Message <- m
+					}
+				}(room.History)
 			}
 
 		case cl := <-c.Unregister:
@@ -53,9 +58,9 @@ func (c *Core) Run() {
 
 			// FAN OUT
 		case m := <-c.Broadcast:
-			if _, ok := c.Rooms[m.RoomID]; ok {
-
-				for _, cl := range c.Rooms[m.RoomID].Clients {
+			if room, ok := c.Rooms[m.RoomID]; ok {
+				room.History = append(room.History, m) // NEW
+				for _, cl := range room.Clients {
 					cl.Message <- m
 				}
 			}

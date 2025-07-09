@@ -65,14 +65,7 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		Username: username,
 	}
 
-	m := &ws.Message{
-		Content:  "A new user has joined the room",
-		RoomID:   roomID,
-		Username: username,
-	}
-
 	h.core.Register <- cl
-	h.core.Broadcast <- m
 
 	go cl.WriteMessage()
 	cl.ReadMessage(h.core)
