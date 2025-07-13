@@ -18,10 +18,24 @@ export default function RoomsPage() {
   }
 
   async function handleCreate() {
+    console.log("handleCreate called, newName:", newName);
     if (!newName.trim()) return;
-    const room = await createRoom(newName.trim());
-    setNewName("");
-    setRooms((r) => [...r, room]);
+    try {
+      console.log("Calling createRoom with:", newName.trim());
+      const room = await createRoom(newName.trim());
+      console.log("Room created:", room);
+      setNewName("");
+      await refresh(); // Refresh to get the latest list from DB
+    } catch (error: any) {
+      console.error("Error creating room:", error);
+      if (error.response?.status === 429) {
+        alert(
+          "Maximum number of rooms reached. Please wait for some rooms to expire.",
+        );
+      } else {
+        alert("Failed to create room. Please try again.");
+      }
+    }
   }
 
   function enterRoom(room: Room) {
@@ -41,7 +55,10 @@ export default function RoomsPage() {
             className="flex-1 rounded-md border-gray-300 px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           />
           <button
-            onClick={handleCreate}
+            onClick={() => {
+              console.log("Button clicked!");
+              handleCreate();
+            }}
             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
           >
             Create

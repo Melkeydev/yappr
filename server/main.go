@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"log"
+	"time"
 
 	"net/http"
 
@@ -10,6 +13,7 @@ import (
 	"github.com/melkeydev/chat-go/db/migrations"
 	coreHandler "github.com/melkeydev/chat-go/internal/api/handler/core"
 	userHandler "github.com/melkeydev/chat-go/internal/api/handler/user"
+	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
 	repository "github.com/melkeydev/chat-go/internal/repo/user"
 	service "github.com/melkeydev/chat-go/internal/service/user"
 	"github.com/melkeydev/chat-go/internal/ws"
@@ -43,7 +47,7 @@ func main() {
 
 	// Set up Services
 	userService := service.NewUserService(userRepo)
-	wsService := ws.NewCore()
+	wsService := ws.NewCore(dbConn)
 
 	// Set up Handlers
 	userHandler := userHandler.NewUserHandler(userService)
@@ -51,9 +55,39 @@ func main() {
 
 	// run it in a separate go routine
 	go wsService.Run()
+	
+	// Start background job to clean up expired rooms
+	go startRoomCleanupJob(dbConn)
 
 	router := router.SetupRouter(userHandler, coreHandler)
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+// startRoomCleanupJob runs a background job that deletes expired rooms every 5 minutes
+func startRoomCleanupJob(db *sql.DB) {
+	roomRepository := roomRepo.NewRoomRepository(db)
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	
+	// Run cleanup immediately on startup
+	cleanupRooms(roomRepository)
+	
+	for range ticker.C {
+		cleanupRooms(roomRepository)
+	}
+}
+
+func cleanupRooms(roomRepository *roomRepo.RoomRepository) {
+	ctx := context.Background()
+	deletedCount, err := roomRepository.DeleteExpiredRooms(ctx)
+	if err != nil {
+		log.Printf("Error deleting expired rooms: %v", err)
+		return
+	}
+	
+	if deletedCount > 0 {
+		log.Printf("Deleted %d expired rooms", deletedCount)
 	}
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export type ChatMessage = {
   content: string;
@@ -13,12 +14,14 @@ export default function useChatSocket(roomId: string) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
 
     let retries = 0;
     let ws: WebSocket;
+    let shouldReconnect = true;
 
     function connect() {
       ws = new WebSocket(
@@ -34,8 +37,16 @@ export default function useChatSocket(roomId: string) {
         setMessages((prev) => [...prev, msg]);
       };
 
-      ws.onclose = () => {
-        if (retries < 5) {
+      ws.onclose = (event) => {
+        // Check if it's a normal close with error status
+        if (event.code === 1008 || event.code === 1003) {
+          // Room doesn't exist or expired
+          alert("This room has expired or doesn't exist. Redirecting to room list...");
+          navigate("/rooms");
+          return;
+        }
+        
+        if (shouldReconnect && retries < 5) {
           retries += 1;
           setTimeout(connect, 500 * retries); // simple back-off
         }
@@ -46,8 +57,11 @@ export default function useChatSocket(roomId: string) {
     }
 
     connect();
-    return () => ws.close();
-  }, [roomId, user]);
+    return () => {
+      shouldReconnect = false;
+      ws.close();
+    };
+  }, [roomId, user, navigate]);
 
   function sendMessage(text: string) {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
