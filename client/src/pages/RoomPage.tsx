@@ -30,6 +30,10 @@ export default function RoomsPage() {
         alert(
           "Maximum number of rooms reached. Please wait for some rooms to expire.",
         );
+      } else if (error.response?.status === 409) {
+        alert(
+          "You already have an active room. Please wait for it to expire before creating a new one.",
+        );
       } else {
         alert("Failed to create room. Please try again.");
       }

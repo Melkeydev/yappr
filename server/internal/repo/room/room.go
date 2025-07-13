@@ -11,10 +11,11 @@ import (
 )
 
 type Room struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	ExpiresAt time.Time `json:"expires_at"`
+	ID        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	CreatorID *uuid.UUID `json:"creator_id"`
+	CreatedAt time.Time  `json:"created_at"`
+	ExpiresAt time.Time  `json:"expires_at"`
 }
 
 type Message struct {
@@ -37,12 +38,12 @@ func NewRoomRepository(db *sql.DB) *RoomRepository {
 
 func (r *RoomRepository) CreateRoom(ctx context.Context, room *Room) (*Room, error) {
 	query := `
-		INSERT INTO rooms (name)
-		VALUES ($1)
+		INSERT INTO rooms (name, creator_id)
+		VALUES ($1, $2)
 		RETURNING id, created_at, expires_at
 	`
 
-	err := r.db.QueryRowContext(ctx, query, room.Name).Scan(
+	err := r.db.QueryRowContext(ctx, query, room.Name, room.CreatorID).Scan(
 		&room.ID,
 		&room.CreatedAt,
 		&room.ExpiresAt,
@@ -57,7 +58,7 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, room *Room) (*Room, err
 
 func (r *RoomRepository) GetRoomByID(ctx context.Context, id uuid.UUID) (*Room, error) {
 	query := `
-		SELECT id, name, created_at, expires_at
+		SELECT id, name, creator_id, created_at, expires_at
 		FROM rooms
 		WHERE id = $1 AND expires_at > NOW()
 	`
@@ -66,6 +67,7 @@ func (r *RoomRepository) GetRoomByID(ctx context.Context, id uuid.UUID) (*Room, 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&room.ID,
 		&room.Name,
+		&room.CreatorID,
 		&room.CreatedAt,
 		&room.ExpiresAt,
 	)
@@ -82,7 +84,7 @@ func (r *RoomRepository) GetRoomByID(ctx context.Context, id uuid.UUID) (*Room, 
 
 func (r *RoomRepository) GetAllActiveRooms(ctx context.Context) ([]*Room, error) {
 	query := `
-		SELECT id, name, created_at, expires_at
+		SELECT id, name, creator_id, created_at, expires_at
 		FROM rooms
 		WHERE expires_at > NOW()
 		ORDER BY created_at DESC
@@ -100,6 +102,7 @@ func (r *RoomRepository) GetAllActiveRooms(ctx context.Context) ([]*Room, error)
 		err := rows.Scan(
 			&room.ID,
 			&room.Name,
+			&room.CreatorID,
 			&room.CreatedAt,
 			&room.ExpiresAt,
 		)
@@ -205,4 +208,14 @@ func (r *RoomRepository) DeleteExpiredRooms(ctx context.Context) (int, error) {
 	}
 
 	return int(rowsAffected), nil
+}
+
+func (r *RoomRepository) HasActiveRoom(ctx context.Context, userID uuid.UUID) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM rooms WHERE creator_id = $1 AND expires_at > NOW()`
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("check active room: %w", err)
+	}
+	return count > 0, nil
 }

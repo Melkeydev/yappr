@@ -75,11 +75,17 @@ export default function LoginPage() {
             </label>
             <input
               type="email"
-              {...register("email", { required: true })}
+              {...register("email", { 
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address"
+                }
+              })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.email && (
-              <p className="mt-1 text-xs text-red-600">Email required</p>
+              <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
             )}
           </div>
 
@@ -89,11 +95,17 @@ export default function LoginPage() {
             </label>
             <input
               type="password"
-              {...register("password", { required: true })}
+              {...register("password", { 
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters"
+                }
+              })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.password && (
-              <p className="mt-1 text-xs text-red-600">Password required</p>
+              <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
             )}
           </div>
 
@@ -105,6 +117,13 @@ export default function LoginPage() {
             {isSubmitting ? "Logging in…" : "Log in"}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <a href="/signup" className="text-indigo-600 hover:text-indigo-500">
+            Sign up
+          </a>
+        </p>
       </div>
     </div>
   );

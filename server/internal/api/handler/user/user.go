@@ -26,13 +26,24 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.userService.CreateUser(r.Context(), req)
+	user, err := h.userService.CreateUser(r.Context(), req)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	util.WriteJSON(w, http.StatusCreated, res)
+	// Set JWT cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    user.AccessToken,
+		Path:     "/",
+		MaxAge:   60 * 60 * 24,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	util.WriteJSON(w, http.StatusCreated, user)
 }
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req model.RequestLoginUser
@@ -52,10 +63,10 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    user.AccessToken,
 		Path:     "/",
-		Domain:   "localhost",
 		MaxAge:   60 * 60 * 24,
 		HttpOnly: true,
 		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	util.WriteJSON(w, http.StatusOK, user)
@@ -66,11 +77,42 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    "",
 		Path:     "/",
-		Domain:   "localhost",
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	util.WriteJSON(w, http.StatusOK, map[string]string{"message": "logout successful"})
+}
+
+func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context (set by JWT middleware)
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		util.WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var req struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+
+	// Validate username
+	if len(req.Username) < 3 || len(req.Username) > 20 {
+		util.WriteError(w, http.StatusBadRequest, "username must be between 3 and 20 characters")
+		return
+	}
+
+	user, err := h.userService.UpdateUsername(r.Context(), userID, req.Username)
+	if err != nil {
+		util.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	util.WriteJSON(w, http.StatusOK, user)
 }

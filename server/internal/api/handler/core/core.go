@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -40,19 +41,53 @@ func NewCoreHandler(c *ws.Core) *CoreHandler {
 func (h *CoreHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	var req model.CreateRoomReq
 
+	log.Printf("CreateRoom called")
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode request: %v", err)
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON payload")
 		return
 	}
 
+	log.Printf("Creating room with name: %s", req.Name)
+
 	ctx := r.Context()
 
-	// Check room limit
+	// Get user ID from context (if authenticated)
+	var creatorID *uuid.UUID
+	if userIDStr, ok := ctx.Value("userID").(string); ok {
+		log.Printf("Found user ID in context: %s", userIDStr)
+		if uid, err := uuid.Parse(userIDStr); err == nil {
+			creatorID = &uid
+			
+			// Check if user already has an active room
+			hasRoom, err := h.roomRepo.HasActiveRoom(ctx, uid)
+			if err != nil {
+				log.Printf("Error checking user rooms: %v", err)
+				util.WriteError(w, http.StatusInternalServerError, "failed to check user rooms")
+				return
+			}
+			if hasRoom {
+				log.Printf("User %s already has an active room", userIDStr)
+				util.WriteError(w, http.StatusConflict, "you already have an active room")
+				return
+			}
+		} else {
+			log.Printf("Failed to parse user ID: %v", err)
+		}
+	} else {
+		log.Printf("No user ID in context (anonymous user)")
+	}
+
+	// Check global room limit
 	activeRooms, err := h.roomRepo.CountActiveRooms(ctx)
 	if err != nil {
+		log.Printf("Error counting active rooms: %v", err)
 		util.WriteError(w, http.StatusInternalServerError, "failed to check room limit")
 		return
 	}
+
+	log.Printf("Active rooms: %d, limit: %d", activeRooms, h.roomLimit)
 
 	if activeRooms >= h.roomLimit {
 		util.WriteError(w, http.StatusTooManyRequests, "maximum number of rooms reached")
@@ -61,13 +96,17 @@ func (h *CoreHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	// Create room in database
 	room := &roomRepo.Room{
-		Name: req.Name,
+		Name:      req.Name,
+		CreatorID: creatorID,
 	}
 	room, err = h.roomRepo.CreateRoom(ctx, room)
 	if err != nil {
+		log.Printf("Error creating room in database: %v", err)
 		util.WriteError(w, http.StatusInternalServerError, "failed to create room")
 		return
 	}
+
+	log.Printf("Room created with ID: %s", room.ID.String())
 
 	// Add to in-memory map
 	h.core.Rooms[room.ID.String()] = &ws.Room{

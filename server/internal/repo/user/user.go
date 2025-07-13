@@ -129,3 +129,34 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (r *UserRepository) UpdateUsername(ctx context.Context, id uuid.UUID, username string) (*User, error) {
+	query := `
+		UPDATE users 
+		SET username = $1, updated_at = NOW()
+		WHERE id = $2
+		RETURNING id, username, email, password_hash, created_at, updated_at
+	`
+
+	var user User
+	err := r.db.QueryRowContext(ctx, query, username, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("user not found")
+		}
+		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+			return nil, errors.New("username already exists")
+		}
+		return nil, fmt.Errorf("update username: %w", err)
+	}
+
+	return &user, nil
+}

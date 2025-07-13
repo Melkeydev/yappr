@@ -30,7 +30,7 @@ func NewUserService(userRepo *repo.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUser) (*repo.User, error) {
+func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUser) (*model.ResponseLoginUser, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -50,8 +50,27 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 		return nil, err
 	}
 
-	return user, nil
+	// Generate JWT token for the new user
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JWTClaims{
+		ID:       user.ID.String(),
+		Username: user.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    user.ID.String(),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	})
 
+	secretKey := os.Getenv("secretKey")
+	ss, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ResponseLoginUser{
+		AccessToken: ss,
+		Username:    user.Username,
+		ID:          user.ID.String(),
+	}, nil
 }
 
 func (s *UserService) Login(ctx context.Context, req model.RequestLoginUser) (*model.ResponseLoginUser, error) {
@@ -93,4 +112,26 @@ func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*repo.User
 
 func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return s.userRepo.DeleteUser(ctx, id)
+}
+
+func (s *UserService) UpdateUsername(ctx context.Context, userID string, newUsername string) (*model.ResponseLoginUser, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	// Parse user ID
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update username in database
+	user, err := s.userRepo.UpdateUsername(ctx, uid, newUsername)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ResponseLoginUser{
+		ID:       user.ID.String(),
+		Username: user.Username,
+	}, nil
 }
