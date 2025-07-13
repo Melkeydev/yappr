@@ -1,6 +1,14 @@
 import { api } from "./auth";
 
-export type Room = { id: string; name: string };
+export type Room = { 
+  id: string; 
+  name: string;
+  is_pinned?: boolean;
+  topic_title?: string;
+  topic_description?: string;
+  topic_url?: string;
+  topic_source?: string;
+};
 
 export async function fetchRooms(): Promise<Room[]> {
   const { data } = await api.get("/ws/getRooms");

@@ -10,10 +10,15 @@ import (
 )
 
 type Room struct {
-	ID      string             `json:"id"`
-	Name    string             `json:"name"`
-	Clients map[string]*Client `json:"clients"`
-	History []*Message
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	Clients          map[string]*Client `json:"clients"`
+	History          []*Message
+	IsPinned         bool               `json:"is_pinned"`
+	TopicTitle       *string            `json:"topic_title,omitempty"`
+	TopicDescription *string            `json:"topic_description,omitempty"`
+	TopicURL         *string            `json:"topic_url,omitempty"`
+	TopicSource      *string            `json:"topic_source,omitempty"`
 }
 
 type Core struct {

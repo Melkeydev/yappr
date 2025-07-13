@@ -15,6 +15,7 @@ import (
 	userHandler "github.com/melkeydev/chat-go/internal/api/handler/user"
 	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
 	repository "github.com/melkeydev/chat-go/internal/repo/user"
+	"github.com/melkeydev/chat-go/internal/service/pinnedrooms"
 	service "github.com/melkeydev/chat-go/internal/service/user"
 	"github.com/melkeydev/chat-go/internal/ws"
 	"github.com/melkeydev/chat-go/router"
@@ -56,8 +57,14 @@ func main() {
 	// run it in a separate go routine
 	go wsService.Run()
 	
+	// Initialize pinned rooms on startup
+	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(dbConn, wsService)
+	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(context.Background()); err != nil {
+		log.Printf("Failed to initialize pinned rooms: %v", err)
+	}
+	
 	// Start background job to clean up expired rooms
-	go startRoomCleanupJob(dbConn)
+	go startRoomCleanupJob(dbConn, wsService)
 
 	router := router.SetupRouter(userHandler, coreHandler)
 	if err := http.ListenAndServe(":8080", router); err != nil {
@@ -66,20 +73,21 @@ func main() {
 }
 
 // startRoomCleanupJob runs a background job that deletes expired rooms every 5 minutes
-func startRoomCleanupJob(db *sql.DB) {
+func startRoomCleanupJob(db *sql.DB, wsCore *ws.Core) {
 	roomRepository := roomRepo.NewRoomRepository(db)
+	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(db, wsCore)
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	
 	// Run cleanup immediately on startup
-	cleanupRooms(roomRepository)
+	cleanupRooms(roomRepository, pinnedRoomsService)
 	
 	for range ticker.C {
-		cleanupRooms(roomRepository)
+		cleanupRooms(roomRepository, pinnedRoomsService)
 	}
 }
 
-func cleanupRooms(roomRepository *roomRepo.RoomRepository) {
+func cleanupRooms(roomRepository *roomRepo.RoomRepository, pinnedRoomsService *pinnedrooms.PinnedRoomsService) {
 	ctx := context.Background()
 	deletedCount, err := roomRepository.DeleteExpiredRooms(ctx)
 	if err != nil {
@@ -89,5 +97,10 @@ func cleanupRooms(roomRepository *roomRepo.RoomRepository) {
 	
 	if deletedCount > 0 {
 		log.Printf("Deleted %d expired rooms", deletedCount)
+	}
+	
+	// Check and refresh pinned rooms if needed
+	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(ctx); err != nil {
+		log.Printf("Error refreshing pinned rooms: %v", err)
 	}
 }

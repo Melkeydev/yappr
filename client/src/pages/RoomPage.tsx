@@ -77,23 +77,68 @@ export default function RoomsPage() {
         )}
 
         {/* room list */}
-        <ul className="space-y-2">
-          {rooms.map((r) => (
-            <li
-              key={r.id}
-              onClick={() => enterRoom(r)}
-              className="cursor-pointer rounded-md bg-white px-4 py-3 shadow hover:bg-gray-50"
-            >
-              <span className="font-medium text-gray-800">{r.name}</span>
-              <span className="ml-2 text-xs text-gray-500">
-                #{r.id.slice(0, 6)}
-              </span>
-            </li>
-          ))}
+        <div className="space-y-4">
+          {/* Pinned rooms section */}
+          {rooms.filter(r => r.is_pinned).length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">📌 Today's Topics</h2>
+              <ul className="space-y-2">
+                {rooms.filter(r => r.is_pinned).map((r) => (
+                  <li
+                    key={r.id}
+                    onClick={() => enterRoom(r)}
+                    className="cursor-pointer rounded-md bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 px-4 py-3 shadow hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-indigo-900">{r.name}</span>
+                          {r.topic_source && (
+                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                              {r.topic_source}
+                            </span>
+                          )}
+                        </div>
+                        {r.topic_title && (
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-2">{r.topic_title}</p>
+                        )}
+                        {r.topic_description && (
+                          <p className="text-xs text-gray-500 mt-1">{r.topic_description}</p>
+                        )}
+                      </div>
+                      <span className="text-indigo-600 text-sm">→</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Regular rooms section */}
+          {rooms.filter(r => !r.is_pinned).length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">Community Rooms</h2>
+              <ul className="space-y-2">
+                {rooms.filter(r => !r.is_pinned).map((r) => (
+                  <li
+                    key={r.id}
+                    onClick={() => enterRoom(r)}
+                    className="cursor-pointer rounded-md bg-white px-4 py-3 shadow hover:bg-gray-50"
+                  >
+                    <span className="font-medium text-gray-800">{r.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      #{r.id.slice(0, 6)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
           {rooms.length === 0 && (
             <p className="text-sm text-gray-500">No rooms yet.</p>
           )}
-        </ul>
+        </div>
       </main>
     </div>
   );

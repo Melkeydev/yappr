@@ -4,18 +4,34 @@ import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import useChatSocket from "../hooks/useChatSocket";
 import MessageBubble from "../components/MessageBubble";
+import { fetchRooms } from "../api/rooms";
 
 export default function ChatPage() {
   const { roomId = "" } = useParams();
   const { user } = useAuth();
   const { messages, sendMessage } = useChatSocket(roomId);
   const [input, setInput] = useState("");
+  const [roomInfo, setRoomInfo] = useState<any>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   /* scroll to newest */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  /* fetch room info for topic */
+  useEffect(() => {
+    async function loadRoomInfo() {
+      try {
+        const rooms = await fetchRooms();
+        const room = rooms.find(r => r.id === roomId);
+        setRoomInfo(room);
+      } catch (error) {
+        console.error("Failed to load room info:", error);
+      }
+    }
+    loadRoomInfo();
+  }, [roomId]);
 
   function handleSend() {
     const text = input.trim();
@@ -34,6 +50,33 @@ export default function ChatPage() {
   return (
     <div className="h-screen flex flex-col">
       <Header />
+
+      {/* Topic banner for pinned rooms */}
+      {roomInfo?.is_pinned && roomInfo?.topic_title && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-3 shadow-md">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h2 className="font-semibold text-lg">{roomInfo.name} - Today's Topic</h2>
+                <p className="text-sm mt-1 opacity-90">{roomInfo.topic_title}</p>
+                {roomInfo.topic_description && (
+                  <p className="text-xs mt-1 opacity-75">{roomInfo.topic_description}</p>
+                )}
+              </div>
+              {roomInfo.topic_url && (
+                <a
+                  href={roomInfo.topic_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-4 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md text-sm transition-colors"
+                >
+                  View Source →
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* message list */}
       <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-6 space-y-3">

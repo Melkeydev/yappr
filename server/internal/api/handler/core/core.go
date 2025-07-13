@@ -110,9 +110,14 @@ func (h *CoreHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	// Add to in-memory map
 	h.core.Rooms[room.ID.String()] = &ws.Room{
-		ID:      room.ID.String(),
-		Name:    room.Name,
-		Clients: make(map[string]*ws.Client),
+		ID:               room.ID.String(),
+		Name:             room.Name,
+		Clients:          make(map[string]*ws.Client),
+		IsPinned:         room.IsPinned,
+		TopicTitle:       room.TopicTitle,
+		TopicDescription: room.TopicDescription,
+		TopicURL:         room.TopicURL,
+		TopicSource:      room.TopicSource,
 	}
 
 	// Return the room with the database-generated ID
@@ -147,9 +152,14 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	// Ensure room exists in memory map
 	if _, exists := h.core.Rooms[roomID]; !exists {
 		h.core.Rooms[roomID] = &ws.Room{
-			ID:      roomID,
-			Name:    dbRoom.Name,
-			Clients: make(map[string]*ws.Client),
+			ID:               roomID,
+			Name:             dbRoom.Name,
+			Clients:          make(map[string]*ws.Client),
+			IsPinned:         dbRoom.IsPinned,
+			TopicTitle:       dbRoom.TopicTitle,
+			TopicDescription: dbRoom.TopicDescription,
+			TopicURL:         dbRoom.TopicURL,
+			TopicSource:      dbRoom.TopicSource,
 		}
 	}
 
@@ -198,16 +208,26 @@ func (h *CoreHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	rooms := make([]model.RoomRes, 0, len(dbRooms))
 	for _, room := range dbRooms {
 		rooms = append(rooms, model.RoomRes{
-			ID:   room.ID.String(),
-			Name: room.Name,
+			ID:               room.ID.String(),
+			Name:             room.Name,
+			IsPinned:         room.IsPinned,
+			TopicTitle:       room.TopicTitle,
+			TopicDescription: room.TopicDescription,
+			TopicURL:         room.TopicURL,
+			TopicSource:      room.TopicSource,
 		})
 
 		// Ensure room exists in memory map
 		if _, exists := h.core.Rooms[room.ID.String()]; !exists {
 			h.core.Rooms[room.ID.String()] = &ws.Room{
-				ID:      room.ID.String(),
-				Name:    room.Name,
-				Clients: make(map[string]*ws.Client),
+				ID:               room.ID.String(),
+				Name:             room.Name,
+				Clients:          make(map[string]*ws.Client),
+				IsPinned:         room.IsPinned,
+				TopicTitle:       room.TopicTitle,
+				TopicDescription: room.TopicDescription,
+				TopicURL:         room.TopicURL,
+				TopicSource:      room.TopicSource,
 			}
 		}
 	}
