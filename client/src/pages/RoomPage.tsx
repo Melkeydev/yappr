@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchRooms, createRoom, type Room } from "../api/rooms";
 import Header from "../components/Header";
+import { useAuth } from "../context/AuthContext";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [newName, setNewName] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     refresh();
@@ -18,16 +20,12 @@ export default function RoomsPage() {
   }
 
   async function handleCreate() {
-    console.log("handleCreate called, newName:", newName);
     if (!newName.trim()) return;
     try {
-      console.log("Calling createRoom with:", newName.trim());
       const room = await createRoom(newName.trim());
-      console.log("Room created:", room);
       setNewName("");
       await refresh(); // Refresh to get the latest list from DB
     } catch (error: any) {
-      console.error("Error creating room:", error);
       if (error.response?.status === 429) {
         alert(
           "Maximum number of rooms reached. Please wait for some rooms to expire.",
@@ -47,23 +45,32 @@ export default function RoomsPage() {
       <Header />
 
       <main className="flex-1 p-6 bg-gray-100">
-        <div className="mb-6 flex gap-2">
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="New room name"
-            className="flex-1 rounded-md border-gray-300 px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <button
-            onClick={() => {
-              console.log("Button clicked!");
-              handleCreate();
-            }}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
-          >
-            Create
-          </button>
-        </div>
+        {/* Only show room creation for authenticated users */}
+        {user && !user.guest && (
+          <div className="mb-6 flex gap-2">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="New room name"
+              className="flex-1 rounded-md border-gray-300 px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+            <button
+              onClick={handleCreate}
+              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
+            >
+              Create
+            </button>
+          </div>
+        )}
+
+        {/* Message for guest users */}
+        {user?.guest && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              You're logged in as a guest. Sign up to create your own rooms!
+            </p>
+          </div>
+        )}
 
         {/* room list */}
         <ul className="space-y-2">

@@ -15,12 +15,18 @@ export default function Header() {
       <span className="text-lg font-semibold">Chat App</span>
 
       {user && (
-        <button
-          onClick={handleLogout}
-          className="rounded-md bg-gray-800 px-3 py-1 text-xs font-medium text-white hover:bg-gray-900 transition"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            {user.username}
+            {user.guest && " (Guest)"}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="rounded-md bg-gray-800 px-3 py-1 text-xs font-medium text-white hover:bg-gray-900 transition"
+          >
+            Logout
+          </button>
+        </div>
       )}
     </header>
   );
