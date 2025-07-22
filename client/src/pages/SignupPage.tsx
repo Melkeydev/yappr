@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { useState } from "react";
 
 type Inputs = { username: string; email: string; password: string; confirmPassword: string };
@@ -16,6 +17,7 @@ export default function SignupPage() {
   } = useForm<Inputs>();
 
   const { setUser } = useAuth();
+  const { showToast } = useToast();
   const [submitError, setSubmitError] = useState<string>("");
 
   async function onSubmit(values: Inputs) {
@@ -26,6 +28,7 @@ export default function SignupPage() {
       console.log("Signup successful:", user);
       setUser(user);
       localStorage.setItem("chat_user", JSON.stringify(user));
+      showToast(`Welcome, ${user.username}! Account created successfully.`, "success");
       navigate("/rooms", { replace: true });
     } catch (error: any) {
       console.error("Signup error:", error);

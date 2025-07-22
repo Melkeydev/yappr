@@ -3,39 +3,50 @@ import { useNavigate } from "react-router-dom";
 import { fetchRooms, createRoom, type Room } from "../api/rooms";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [newName, setNewName] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     refresh();
   }, []);
 
   async function refresh() {
-    const data = await fetchRooms();
-    setRooms(data);
+    try {
+      const data = await fetchRooms();
+      setRooms(data);
+    } catch (error: any) {
+      console.error("Failed to fetch rooms:", error);
+      showToast("Failed to load rooms. Please refresh the page.", "error");
+    }
   }
 
   async function handleCreate() {
-    if (!newName.trim()) return;
+    if (!newName.trim()) {
+      showToast("Please enter a room name", "warning");
+      return;
+    }
+    
     try {
       const room = await createRoom(newName.trim());
       setNewName("");
+      showToast(`Room "${room.name}" created successfully!`, "success");
       await refresh(); // Refresh to get the latest list from DB
     } catch (error: any) {
+      console.error("Failed to create room:", error);
+      
       if (error.response?.status === 429) {
-        alert(
-          "Maximum number of rooms reached. Please wait for some rooms to expire.",
-        );
+        showToast("Maximum number of rooms reached. Please wait for some rooms to expire.", "error");
       } else if (error.response?.status === 409) {
-        alert(
-          "You already have an active room. Please wait for it to expire before creating a new one.",
-        );
+        showToast("You already have an active room. Please wait for it to expire before creating a new one.", "warning");
       } else {
-        alert("Failed to create room. Please try again.");
+        const errorMessage = error.response?.data?.error || "Failed to create room. Please try again.";
+        showToast(errorMessage, "error");
       }
     }
   }

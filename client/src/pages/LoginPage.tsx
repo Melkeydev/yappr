@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import { useState } from "react";
 
 type Inputs = { email: string; password: string };
 
@@ -14,6 +16,8 @@ export default function LoginPage() {
   } = useForm<Inputs>();
 
   const { setUser } = useAuth();
+  const { showToast } = useToast();
+  const [submitError, setSubmitError] = useState<string>("");
 
   /** ──────── handlers ──────── */
 
@@ -31,15 +35,37 @@ export default function LoginPage() {
   // real login
 
   async function onSubmit(values: Inputs) {
+    setSubmitError("");
     try {
+      console.log("Attempting login with:", values.email);
       const user = await login(values.email, values.password);
 
-      setUser(user); // NEW
+      setUser(user);
       localStorage.setItem("chat_user", JSON.stringify(user));
+      showToast(`Welcome back, ${user.username}!`, "success");
 
       navigate("/rooms", { replace: true });
-    } catch {
-      alert("Login failed");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      let errorMessage = "Login failed";
+      
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Invalid email or password";
+        } else if (error.response.status >= 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = error.response.data?.error || `Login failed: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        errorMessage = "Cannot reach server. Please check your connection.";
+      } else {
+        errorMessage = error.message || "An unexpected error occurred";
+      }
+      
+      setSubmitError(errorMessage);
+      showToast(errorMessage, "error");
     }
   }
   /** ──────── UI ──────── */
@@ -69,6 +95,12 @@ export default function LoginPage() {
 
         {/* Login form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {submitError}
+            </div>
+          )}
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Email

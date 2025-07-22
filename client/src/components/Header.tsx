@@ -1,13 +1,23 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   async function handleLogout() {
-    await logout(); // clears cookie + localStorage
-    navigate("/login", { replace: true });
+    try {
+      await logout(); // clears cookie + localStorage
+      showToast("Logged out successfully", "success");
+      navigate("/login", { replace: true });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      showToast("Failed to logout properly. Please clear your browser data if issues persist.", "warning");
+      // Still navigate even if logout failed
+      navigate("/login", { replace: true });
+    }
   }
 
   return (

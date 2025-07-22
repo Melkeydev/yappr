@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import Header from "../components/Header";
 import { api } from "../api/auth";
 
@@ -11,6 +12,7 @@ export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const { showToast } = useToast();
   
   const {
     register,
@@ -38,9 +40,20 @@ export default function ProfilePage() {
       localStorage.setItem("chat_user", JSON.stringify(updatedUser));
       
       setIsEditing(false);
-      alert("Username updated successfully!");
+      showToast("Username updated successfully!", "success");
     } catch (error: any) {
-      alert(error.response?.data?.error || "Failed to update username");
+      console.error("Failed to update username:", error);
+      
+      let errorMessage = "Failed to update username";
+      if (error.response?.status === 409) {
+        errorMessage = "Username already taken. Please choose another.";
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.request) {
+        errorMessage = "Cannot reach server. Please check your connection.";
+      }
+      
+      showToast(errorMessage, "error");
     }
   }
 

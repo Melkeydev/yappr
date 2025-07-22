@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import useChatSocket from "../hooks/useChatSocket";
 import MessageBubble from "../components/MessageBubble";
 import { fetchRooms } from "../api/rooms";
+import { useToast } from "../context/ToastContext";
 
 export default function ChatPage() {
   const { roomId = "" } = useParams();
@@ -13,6 +14,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const { showToast } = useToast();
 
   /* scroll to newest */
   useEffect(() => {
@@ -28,16 +30,26 @@ export default function ChatPage() {
         setRoomInfo(room);
       } catch (error) {
         console.error("Failed to load room info:", error);
+        showToast("Failed to load room information", "warning");
       }
     }
     loadRoomInfo();
-  }, [roomId]);
+  }, [roomId, showToast]);
 
   function handleSend() {
     const text = input.trim();
-    if (!text) return;
-    sendMessage(text);
-    setInput("");
+    if (!text) {
+      showToast("Please enter a message", "warning");
+      return;
+    }
+    
+    try {
+      sendMessage(text);
+      setInput("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      showToast("Failed to send message. Please try again.", "error");
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
