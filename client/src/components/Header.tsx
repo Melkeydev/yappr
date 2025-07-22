@@ -22,9 +22,14 @@ export default function Header() {
 
   return (
     <header className="h-14 flex items-center justify-between px-4 bg-white shadow">
-      <Link to="/rooms" className="text-lg font-semibold hover:text-gray-700">
-        Chat App
-      </Link>
+      <div className="flex items-center gap-6">
+        <Link to="/rooms" className="text-lg font-semibold hover:text-gray-700">
+          Chat App
+        </Link>
+        <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+          About
+        </Link>
+      </div>
 
       {user && (
         <div className="flex items-center gap-4">

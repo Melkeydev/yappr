@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Inputs = { username: string; email: string; password: string; confirmPassword: string };
 
@@ -16,9 +16,16 @@ export default function SignupPage() {
     formState: { errors, isSubmitting },
   } = useForm<Inputs>();
 
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [submitError, setSubmitError] = useState<string>("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/rooms", { replace: true });
+    }
+  }, [user, navigate]);
 
   async function onSubmit(values: Inputs) {
     setSubmitError("");
@@ -162,6 +169,12 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link to="/login" className="text-indigo-600 hover:text-indigo-500">
             Log in
+          </Link>
+        </p>
+        
+        <p className="mt-2 text-center text-xs text-gray-500">
+          <Link to="/about" className="hover:text-gray-700 transition-colors">
+            Learn more about Anonymous Chat
           </Link>
         </p>
       </div>

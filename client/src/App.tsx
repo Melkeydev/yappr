@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ChatPage from "./pages/ChatPage";
 import ProfilePage from "./pages/ProfilePage";
+import AboutPage from "./pages/AboutPage";
 import Protected from "./components/Protected";
 import RoomsPage from "./pages/RoomPage";
 
@@ -17,6 +18,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/about" element={<AboutPage />} />
 
             <Route element={<Protected />}>
               <Route path="/rooms" element={<RoomsPage />} />

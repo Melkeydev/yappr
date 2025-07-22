@@ -100,15 +100,31 @@ func (s *UserService) Login(ctx context.Context, req model.RequestLoginUser) (*m
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
+	log.Printf("UserService.Login - Starting login attempt for email: %s", req.Email)
+
 	user, err := s.userRepo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, err
+		log.Printf("UserService.Login - Database error: %v", err)
+		return nil, fmt.Errorf("failed to authenticate user")
+	}
+	
+	if user == nil {
+		log.Printf("UserService.Login - User not found for email: %s", req.Email)
+		return nil, fmt.Errorf("invalid email or password")
+	}
+	
+	if user.PasswordHash == nil {
+		log.Printf("UserService.Login - User has no password hash: %s", req.Email)
+		return nil, fmt.Errorf("invalid user account")
 	}
 
 	err = util.CheckPassword(req.Password, *user.PasswordHash)
 	if err != nil {
-		return nil, err
+		log.Printf("UserService.Login - Password check failed for user: %s", user.ID.String())
+		return nil, fmt.Errorf("invalid email or password")
 	}
+
+	log.Printf("UserService.Login - Password verified successfully for user: %s", user.ID.String())
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JWTClaims{
 		ID:       user.ID.String(),
@@ -123,9 +139,11 @@ func (s *UserService) Login(ctx context.Context, req model.RequestLoginUser) (*m
 
 	ss, err := token.SignedString([]byte(secretKey))
 	if err != nil {
-		return nil, err
+		log.Printf("UserService.Login - JWT signing failed for user: %s, error: %v", user.ID.String(), err)
+		return nil, fmt.Errorf("failed to generate authentication token")
 	}
 
+	log.Printf("UserService.Login - Login successful for user: %s (%s)", user.ID.String(), user.Username)
 	return &model.ResponseLoginUser{AccessToken: ss, Username: user.Username, ID: user.ID.String()}, nil
 }
 

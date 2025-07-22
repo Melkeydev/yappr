@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Inputs = { email: string; password: string };
 
@@ -15,9 +15,16 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<Inputs>();
 
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [submitError, setSubmitError] = useState<string>("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/rooms", { replace: true });
+    }
+  }, [user, navigate]);
 
   /** ──────── handlers ──────── */
 
@@ -208,6 +215,12 @@ export default function LoginPage() {
           <a href="/signup" className="text-indigo-600 hover:text-indigo-500">
             Sign up
           </a>
+        </p>
+        
+        <p className="mt-2 text-center text-xs text-gray-500">
+          <Link to="/about" className="hover:text-gray-700 transition-colors">
+            Learn more about Anonymous Chat
+          </Link>
         </p>
         </div>
       </div>
