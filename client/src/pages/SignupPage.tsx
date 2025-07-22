@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 type Inputs = { username: string; email: string; password: string; confirmPassword: string };
 
@@ -15,15 +16,36 @@ export default function SignupPage() {
   } = useForm<Inputs>();
 
   const { setUser } = useAuth();
+  const [submitError, setSubmitError] = useState<string>("");
 
   async function onSubmit(values: Inputs) {
+    setSubmitError("");
     try {
+      console.log("Attempting signup with:", { username: values.username, email: values.email });
       const user = await signup(values.username, values.email, values.password);
+      console.log("Signup successful:", user);
       setUser(user);
       localStorage.setItem("chat_user", JSON.stringify(user));
       navigate("/rooms", { replace: true });
     } catch (error: any) {
-      alert(error.response?.data?.error || "Signup failed");
+      console.error("Signup error:", error);
+      let errorMessage = "Signup failed";
+      
+      if (error.response) {
+        // Server responded with error status
+        errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+        console.error("Server response:", error.response.data);
+      } else if (error.request) {
+        // Request was made but no response received (network issues, CORS, etc.)
+        errorMessage = "Cannot reach server. Please check your connection.";
+        console.error("Network error:", error.request);
+      } else {
+        // Something else happened
+        errorMessage = error.message || "An unexpected error occurred";
+        console.error("Unexpected error:", error.message);
+      }
+      
+      setSubmitError(errorMessage);
     }
   }
 
@@ -33,6 +55,12 @@ export default function SignupPage() {
         <h1 className="text-2xl font-bold text-center mb-6">Create Account</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {submitError}
+            </div>
+          )}
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Username

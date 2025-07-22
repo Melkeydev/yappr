@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,9 +37,23 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
+	log.Printf("UserService.CreateUser - Starting user creation for: %s", req.Email)
+
+	// Validate input
+	if req.Username == "" || req.Email == "" || req.Password == "" {
+		log.Printf("UserService.CreateUser - Validation failed: missing required fields")
+		return nil, fmt.Errorf("username, email, and password are required")
+	}
+
+	if len(req.Password) < 6 {
+		log.Printf("UserService.CreateUser - Validation failed: password too short")
+		return nil, fmt.Errorf("password must be at least 6 characters")
+	}
+
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		return nil, err
+		log.Printf("UserService.CreateUser - Password hashing failed: %v", err)
+		return nil, fmt.Errorf("failed to process password")
 	}
 
 	u := &repo.User{
@@ -47,8 +64,14 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 
 	user, err := s.userRepo.CreateUser(ctx, u)
 	if err != nil {
-		return nil, err
+		log.Printf("UserService.CreateUser - Database error: %v", err)
+		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
+			return nil, fmt.Errorf("username or email already exists")
+		}
+		return nil, fmt.Errorf("failed to create user: %v", err)
 	}
+
+	log.Printf("UserService.CreateUser - User created successfully in database: %s", user.ID.String())
 
 	// Generate JWT token for the new user
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JWTClaims{

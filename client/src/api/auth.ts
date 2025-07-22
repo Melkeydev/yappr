@@ -2,9 +2,33 @@ import axios from "axios";
 
 // Axios instance that always includes the cookie the backend sets
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
+  baseURL: import.meta.env.VITE_API_URL || "", // Use empty string to use relative URLs for proxy
   withCredentials: true,
+  timeout: 10000, // 10 second timeout
 });
+
+// Add request/response interceptors for better debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log(`Response from ${response.config.url}:`, response.status);
+    return response;
+  },
+  (error) => {
+    console.error('Response interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Log in with email + password.

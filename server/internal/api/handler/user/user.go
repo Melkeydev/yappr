@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/melkeydev/chat-go/internal/api/model"
@@ -22,15 +23,21 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req model.RequestCreateUser
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("CreateUser - JSON decode error: %v", err)
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON payload")
 		return
 	}
 
+	log.Printf("CreateUser - Request received: username=%s, email=%s", req.Username, req.Email)
+
 	user, err := h.userService.CreateUser(r.Context(), req)
 	if err != nil {
+		log.Printf("CreateUser - Service error: %v", err)
 		util.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	log.Printf("CreateUser - Success: user created with ID=%s, username=%s", user.ID, user.Username)
 
 	// Set JWT cookie
 	http.SetCookie(w, &http.Cookie{
