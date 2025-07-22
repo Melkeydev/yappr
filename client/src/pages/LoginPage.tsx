@@ -217,11 +217,21 @@ export default function LoginPage() {
           </a>
         </p>
         
-        <p className="mt-2 text-center text-xs text-gray-500">
-          <Link to="/about" className="hover:text-gray-700 transition-colors">
-            Learn more about Anonymous Chat
-          </Link>
-        </p>
+        <div className="mt-4 text-center space-y-2">
+          <p className="text-xs text-gray-500">
+            <Link to="/about" className="hover:text-gray-700 transition-colors">
+              Learn more about Anonymous Chat
+            </Link>
+          </p>
+          <div className="flex justify-center space-x-4 text-xs text-gray-400">
+            <Link to="/terms" className="hover:text-gray-600 transition-colors">
+              Terms
+            </Link>
+            <Link to="/privacy" className="hover:text-gray-600 transition-colors">
+              Privacy
+            </Link>
+          </div>
+        </div>
         </div>
       </div>
     </div>

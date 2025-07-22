@@ -7,6 +7,8 @@ import SignupPage from "./pages/SignupPage";
 import ChatPage from "./pages/ChatPage";
 import ProfilePage from "./pages/ProfilePage";
 import AboutPage from "./pages/AboutPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 import Protected from "./components/Protected";
 import RoomsPage from "./pages/RoomPage";
 
@@ -19,6 +21,8 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
             <Route element={<Protected />}>
               <Route path="/rooms" element={<RoomsPage />} />

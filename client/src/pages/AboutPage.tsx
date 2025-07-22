@@ -103,6 +103,18 @@ export default function AboutPage() {
               </svg>
             </Link>
           </div>
+
+          {/* Legal Links */}
+          <div className="mt-8 pt-8 border-t border-gray-200 text-center">
+            <div className="flex justify-center space-x-6 text-sm text-gray-500">
+              <Link to="/terms" className="hover:text-gray-700 transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/privacy" className="hover:text-gray-700 transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     </div>
