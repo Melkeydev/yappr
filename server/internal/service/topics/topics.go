@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -25,6 +27,14 @@ func NewTopicService() *TopicService {
 			Timeout: 10 * time.Second,
 		},
 	}
+}
+
+// cleanText decodes HTML entities and trims whitespace from text
+func cleanText(text string) string {
+	// Decode HTML entities like &amp;, &lt;, &gt;, &quot;, etc.
+	decoded := html.UnescapeString(text)
+	// Trim whitespace
+	return strings.TrimSpace(decoded)
 }
 
 // FetchHackerNewsTop fetches the top story from Hacker News
@@ -72,7 +82,7 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 	}
 
 	topic := &Topic{
-		Title:       story.Title,
+		Title:       cleanText(story.Title),
 		Description: fmt.Sprintf("Top HN story with %d points by %s", story.Score, story.By),
 		URL:         story.URL,
 		Source:      "HackerNews",
@@ -120,7 +130,7 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 	redditURL := "https://reddit.com" + post.Permalink
 
 	topic := &Topic{
-		Title:       post.Title,
+		Title:       cleanText(post.Title),
 		Description: fmt.Sprintf("Top world news with %d upvotes", post.Score),
 		URL:         redditURL,
 		Source:      "Reddit WorldNews",
@@ -166,7 +176,7 @@ func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
 	redditURL := "https://reddit.com" + post.Permalink
 
 	return &Topic{
-		Title:       post.Title,
+		Title:       cleanText(post.Title),
 		Description: fmt.Sprintf("Today's top learning with %d upvotes", post.Score),
 		URL:         redditURL,
 		Source:      "Reddit TIL",
