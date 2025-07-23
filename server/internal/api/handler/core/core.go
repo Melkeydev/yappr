@@ -211,6 +211,8 @@ func (h *CoreHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 			ID:               room.ID.String(),
 			Name:             room.Name,
 			IsPinned:         room.IsPinned,
+			CreatedAt:        room.CreatedAt,
+			ExpiresAt:        room.ExpiresAt,
 			TopicTitle:       room.TopicTitle,
 			TopicDescription: room.TopicDescription,
 			TopicURL:         room.TopicURL,

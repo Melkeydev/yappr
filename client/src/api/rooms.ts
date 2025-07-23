@@ -4,6 +4,8 @@ export type Room = {
   id: string; 
   name: string;
   is_pinned?: boolean;
+  created_at: string;
+  expires_at: string;
   topic_title?: string;
   topic_description?: string;
   topic_url?: string;
