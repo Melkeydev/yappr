@@ -1,8 +1,19 @@
 import { api } from "./auth";
 
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  threshold_type: string;
+  threshold_value: number;
+  earned_at?: string;
+}
+
 export interface CheckinResult {
   streak_count: number;
   is_new_checkin: boolean;
+  new_achievements?: Achievement[];
 }
 
 export interface UserProfile {
@@ -12,6 +23,7 @@ export interface UserProfile {
   total_messages: number;
   total_upvotes_received: number;
   can_receive_upvote: boolean;
+  achievements: Achievement[];
 }
 
 export async function performDailyCheckin(): Promise<CheckinResult> {

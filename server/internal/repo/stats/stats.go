@@ -3,6 +3,7 @@ package stats
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,6 +34,16 @@ type Upvote struct {
 	FromUserID uuid.UUID `db:"from_user_id"`
 	ToUserID   uuid.UUID `db:"to_user_id"`
 	CreatedAt  time.Time `db:"created_at"`
+}
+
+type Achievement struct {
+	ID            uuid.UUID `db:"id"`
+	Name          string    `db:"name"`
+	Description   string    `db:"description"`
+	Icon          string    `db:"icon"`
+	ThresholdType string    `db:"threshold_type"`
+	ThresholdValue int      `db:"threshold_value"`
+	EarnedAt      *time.Time `db:"earned_at,omitempty"`
 }
 
 type StatsRepository struct {
@@ -268,4 +279,170 @@ func (r *StatsRepository) IncrementMessageCount(ctx context.Context, userID uuid
 	}
 	
 	return nil
+}
+
+// CheckAndAwardAchievements checks if user has earned new achievements and awards them
+func (r *StatsRepository) CheckAndAwardAchievements(ctx context.Context, userID uuid.UUID) ([]Achievement, error) {
+	// Get user's current stats
+	stats, err := r.GetOrCreateUserStats(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Get all achievement types
+	achievementTypes, err := r.getAllAchievementTypes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Get user's already earned achievements
+	earnedAchievements, err := r.getUserAchievements(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Check for new achievements
+	newAchievements := []Achievement{}
+	
+	for _, achType := range achievementTypes {
+		// Skip if already earned
+		if r.hasAchievement(earnedAchievements, achType.ID) {
+			continue
+		}
+		
+		// Check if threshold is met
+		var currentValue int
+		switch achType.ThresholdType {
+		case "streak":
+			currentValue = stats.DailyStreak
+		case "messages":
+			currentValue = stats.TotalMessages
+		case "upvotes":
+			currentValue = stats.TotalUpvotesReceived
+		default:
+			continue
+		}
+		
+		if currentValue >= achType.ThresholdValue {
+			// Award the achievement
+			if err := r.awardAchievement(ctx, userID, achType.ID); err != nil {
+				log.Printf("Failed to award achievement %s to user %s: %v", achType.Name, userID.String(), err)
+				continue
+			}
+			
+			achievement := Achievement{
+				ID:            achType.ID,
+				Name:          achType.Name,
+				Description:   achType.Description,
+				Icon:          achType.Icon,
+				ThresholdType: achType.ThresholdType,
+				ThresholdValue: achType.ThresholdValue,
+			}
+			newAchievements = append(newAchievements, achievement)
+		}
+	}
+	
+	return newAchievements, nil
+}
+
+// getAllAchievementTypes gets all available achievement types
+func (r *StatsRepository) getAllAchievementTypes(ctx context.Context) ([]Achievement, error) {
+	query := `
+		SELECT id, name, description, icon, threshold_type, threshold_value
+		FROM achievement_types
+		ORDER BY threshold_value ASC`
+	
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var achievements []Achievement
+	for rows.Next() {
+		var ach Achievement
+		err := rows.Scan(&ach.ID, &ach.Name, &ach.Description, &ach.Icon, 
+			&ach.ThresholdType, &ach.ThresholdValue)
+		if err != nil {
+			return nil, err
+		}
+		achievements = append(achievements, ach)
+	}
+	
+	return achievements, rows.Err()
+}
+
+// getUserAchievements gets user's earned achievements
+func (r *StatsRepository) getUserAchievements(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	query := `
+		SELECT achievement_type_id 
+		FROM user_achievements 
+		WHERE user_id = $1`
+	
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var achievementIDs []uuid.UUID
+	for rows.Next() {
+		var achID uuid.UUID
+		if err := rows.Scan(&achID); err != nil {
+			return nil, err
+		}
+		achievementIDs = append(achievementIDs, achID)
+	}
+	
+	return achievementIDs, rows.Err()
+}
+
+// hasAchievement checks if user already has an achievement
+func (r *StatsRepository) hasAchievement(earnedAchievements []uuid.UUID, achievementID uuid.UUID) bool {
+	for _, achID := range earnedAchievements {
+		if achID == achievementID {
+			return true
+		}
+	}
+	return false
+}
+
+// awardAchievement awards an achievement to a user
+func (r *StatsRepository) awardAchievement(ctx context.Context, userID, achievementID uuid.UUID) error {
+	query := `
+		INSERT INTO user_achievements (user_id, achievement_type_id)
+		VALUES ($1, $2)
+		ON CONFLICT (user_id, achievement_type_id) DO NOTHING`
+	
+	_, err := r.db.ExecContext(ctx, query, userID, achievementID)
+	return err
+}
+
+// GetUserAchievementsWithDetails gets user's achievements with full details
+func (r *StatsRepository) GetUserAchievementsWithDetails(ctx context.Context, userID uuid.UUID) ([]Achievement, error) {
+	query := `
+		SELECT at.id, at.name, at.description, at.icon, at.threshold_type, at.threshold_value, ua.earned_at
+		FROM user_achievements ua
+		JOIN achievement_types at ON ua.achievement_type_id = at.id
+		WHERE ua.user_id = $1
+		ORDER BY ua.earned_at DESC`
+	
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var achievements []Achievement
+	for rows.Next() {
+		var ach Achievement
+		err := rows.Scan(&ach.ID, &ach.Name, &ach.Description, &ach.Icon,
+			&ach.ThresholdType, &ach.ThresholdValue, &ach.EarnedAt)
+		if err != nil {
+			return nil, err
+		}
+		achievements = append(achievements, ach)
+	}
+	
+	return achievements, rows.Err()
 }

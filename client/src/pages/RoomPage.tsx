@@ -50,6 +50,15 @@ export default function RoomsPage() {
           ? "+1 Daily check-in" 
           : `+${result.streak_count} Daily check-in`;
         showToast(streakMessage, "golden", 7000);
+        
+        // Show achievement notifications
+        if (result.new_achievements && result.new_achievements.length > 0) {
+          result.new_achievements.forEach((achievement, index) => {
+            setTimeout(() => {
+              showToast(`🏆 Achievement Unlocked: ${achievement.name}!`, "golden", 8000);
+            }, (index + 1) * 2000); // Stagger achievement notifications
+          });
+        }
       }
     } catch (error: any) {
       // Silently fail check-ins to not interrupt user experience

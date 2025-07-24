@@ -135,6 +135,14 @@ func (c *Core) Run() {
 					if userID != nil {
 						if err := c.statsRepo.IncrementMessageCount(context.Background(), *userID); err != nil {
 							log.Printf("Failed to update message count for user %s: %v", userID.String(), err)
+						} else {
+							// Check for new achievements in background
+							go func() {
+								_, err := c.statsRepo.CheckAndAwardAchievements(context.Background(), *userID)
+								if err != nil {
+									log.Printf("Error checking achievements for message sender %s: %v", userID.String(), err)
+								}
+							}()
 						}
 					}
 				}(m)

@@ -19,17 +19,29 @@ func NewStatsService(statsRepo *statsRepo.StatsRepository) *StatsService {
 }
 
 type CheckinResult struct {
-	StreakCount int  `json:"streak_count"`
-	IsNewCheckin bool `json:"is_new_checkin"`
+	StreakCount     int           `json:"streak_count"`
+	IsNewCheckin    bool          `json:"is_new_checkin"`
+	NewAchievements []Achievement `json:"new_achievements,omitempty"`
+}
+
+type Achievement struct {
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Icon          string `json:"icon"`
+	ThresholdType string `json:"threshold_type"`
+	ThresholdValue int   `json:"threshold_value"`
+	EarnedAt      string `json:"earned_at,omitempty"`
 }
 
 type UserProfile struct {
-	UserID               string `json:"user_id"`
-	DailyStreak          int    `json:"daily_streak"`
-	TotalCheckins        int    `json:"total_checkins"`
-	TotalMessages        int    `json:"total_messages"`
-	TotalUpvotesReceived int    `json:"total_upvotes_received"`
-	CanReceiveUpvote     bool   `json:"can_receive_upvote"`
+	UserID               string        `json:"user_id"`
+	DailyStreak          int           `json:"daily_streak"`
+	TotalCheckins        int           `json:"total_checkins"`
+	TotalMessages        int           `json:"total_messages"`
+	TotalUpvotesReceived int           `json:"total_upvotes_received"`
+	CanReceiveUpvote     bool          `json:"can_receive_upvote"`
+	Achievements         []Achievement `json:"achievements"`
 }
 
 // ProcessDailyCheckin handles user check-in and returns streak info
@@ -48,9 +60,21 @@ func (s *StatsService) ProcessDailyCheckin(ctx context.Context, userID uuid.UUID
 		log.Printf("User %s already checked in today, streak: %d", userID.String(), streakCount)
 	}
 	
+	// Check for new achievements after check-in
+	var newAchievements []Achievement
+	if isNewCheckin {
+		achievements, err := s.statsRepo.CheckAndAwardAchievements(ctx, userID)
+		if err != nil {
+			log.Printf("Error checking achievements for user %s: %v", userID.String(), err)
+		} else {
+			newAchievements = s.convertAchievements(achievements)
+		}
+	}
+	
 	return &CheckinResult{
-		StreakCount:  streakCount,
-		IsNewCheckin: isNewCheckin,
+		StreakCount:     streakCount,
+		IsNewCheckin:    isNewCheckin,
+		NewAchievements: newAchievements,
 	}, nil
 }
 
@@ -60,6 +84,14 @@ func (s *StatsService) GetUserProfile(ctx context.Context, userID, viewerID uuid
 	if err != nil {
 		log.Printf("Error getting user profile: %v", err)
 		return nil, err
+	}
+	
+	// Get user's achievements
+	achievements, err := s.statsRepo.GetUserAchievementsWithDetails(ctx, userID)
+	if err != nil {
+		log.Printf("Error getting user achievements: %v", err)
+		// Don't fail the whole request, just return empty achievements
+		achievements = []statsRepo.Achievement{}
 	}
 	
 	// Check if viewer can upvote this user
@@ -80,6 +112,7 @@ func (s *StatsService) GetUserProfile(ctx context.Context, userID, viewerID uuid
 		TotalMessages:        stats.TotalMessages,
 		TotalUpvotesReceived: stats.TotalUpvotesReceived,
 		CanReceiveUpvote:     canUpvote,
+		Achievements:         s.convertAchievements(achievements),
 	}, nil
 }
 
@@ -108,6 +141,14 @@ func (s *StatsService) GiveUpvote(ctx context.Context, fromUserID, toUserID uuid
 		return err
 	}
 	
+	// Check for new achievements for the recipient
+	go func() {
+		_, err := s.statsRepo.CheckAndAwardAchievements(context.Background(), toUserID)
+		if err != nil {
+			log.Printf("Error checking achievements for upvote recipient %s: %v", toUserID.String(), err)
+		}
+	}()
+	
 	log.Printf("Upvote successfully processed")
 	return nil
 }
@@ -125,4 +166,26 @@ type StatsError struct {
 
 func (e *StatsError) Error() string {
 	return e.Message
+}
+
+// convertAchievements converts repository achievements to service achievements
+func (s *StatsService) convertAchievements(repoAchievements []statsRepo.Achievement) []Achievement {
+	var achievements []Achievement
+	for _, ach := range repoAchievements {
+		earnedAt := ""
+		if ach.EarnedAt != nil {
+			earnedAt = ach.EarnedAt.Format("2006-01-02T15:04:05Z")
+		}
+		
+		achievements = append(achievements, Achievement{
+			ID:            ach.ID.String(),
+			Name:          ach.Name,
+			Description:   ach.Description,
+			Icon:          ach.Icon,
+			ThresholdType: ach.ThresholdType,
+			ThresholdValue: ach.ThresholdValue,
+			EarnedAt:      earnedAt,
+		})
+	}
+	return achievements
 }

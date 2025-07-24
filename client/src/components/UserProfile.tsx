@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUserProfile, giveUpvote, type UserProfile as UserProfileType } from '../api/stats';
+import { getUserProfile, giveUpvote, type UserProfile as UserProfileType, type Achievement } from '../api/stats';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -113,6 +113,32 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
                 <div className="text-xs text-gray-500 mt-1">⭐</div>
               </div>
             </div>
+
+            {/* Achievements Section */}
+            {profile.achievements && profile.achievements.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">🏆 Achievements</h3>
+                <div className="grid grid-cols-1 gap-2">
+                  {profile.achievements.map((achievement) => (
+                    <div
+                      key={achievement.id}
+                      className="flex items-center gap-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-amber-200 rounded-lg p-3"
+                    >
+                      <span className="text-2xl">{achievement.icon}</span>
+                      <div className="flex-1">
+                        <div className="font-semibold text-amber-900">{achievement.name}</div>
+                        <div className="text-sm text-amber-700">{achievement.description}</div>
+                        {achievement.earned_at && (
+                          <div className="text-xs text-amber-600 mt-1">
+                            Earned: {new Date(achievement.earned_at).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Upvote Button */}
             {user && !user.guest && profile.can_receive_upvote && (
