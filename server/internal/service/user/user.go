@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -83,7 +82,7 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 		},
 	})
 
-	secretKey := os.Getenv("secretKey")
+	secretKey := util.GetEnv("secretKey", "")
 	ss, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return nil, err
@@ -135,7 +134,7 @@ func (s *UserService) Login(ctx context.Context, req model.RequestLoginUser) (*m
 		},
 	})
 
-	secretKey := os.Getenv("secretKey")
+	secretKey := util.GetEnv("secretKey", "")
 
 	ss, err := token.SignedString([]byte(secretKey))
 	if err != nil {

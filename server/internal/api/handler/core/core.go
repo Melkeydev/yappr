@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -27,7 +26,7 @@ type CoreHandler struct {
 func NewCoreHandler(c *ws.Core) *CoreHandler {
 	// Default room limit is 100, can be overridden by MAX_ROOMS env var
 	roomLimit := 50
-	if maxRoomsStr := os.Getenv("MAX_ROOMS"); maxRoomsStr != "" {
+	if maxRoomsStr := util.GetEnv("MAX_ROOMS", ""); maxRoomsStr != "" {
 		if limit, err := strconv.Atoi(maxRoomsStr); err == nil && limit > 0 {
 			roomLimit = limit
 		}

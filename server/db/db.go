@@ -5,15 +5,15 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
-	"os"
+	"github.com/melkeydev/chat-go/util"
 )
 
 func NewDatabase() (*sql.DB, error) {
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "5433")
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
-	dbName := getEnv("DB_NAME", "go_chat_db")
+	dbHost := util.GetEnv("DB_HOST", "localhost")
+	dbPort := util.GetEnv("DB_PORT", "5433")
+	dbUser := util.GetEnv("DB_USER", "postgres")
+	dbPassword := util.GetEnv("DB_PASSWORD", "postgres")
+	dbName := util.GetEnv("DB_NAME", "go_chat_db")
 
 	localDSN := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -26,12 +26,4 @@ func NewDatabase() (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
 }

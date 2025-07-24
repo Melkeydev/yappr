@@ -25,9 +25,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("could not initialize .env filed: %s", err)
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: .env file not found, using environment variables")
 	}
 
 	dbConn, err := db.NewDatabase()

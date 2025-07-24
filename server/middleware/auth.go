@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/melkeydev/chat-go/util"
@@ -30,7 +29,7 @@ func JWTAuth(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(os.Getenv("secretKey")), nil
+			return []byte(util.GetEnv("secretKey", "")), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -83,7 +82,7 @@ func OptionalJWTAuth(next http.Handler) http.Handler {
 				log.Printf("OptionalJWTAuth: Invalid signing method")
 				return nil, jwt.ErrSignatureInvalid
 			}
-			secretKey := os.Getenv("secretKey")
+			secretKey := util.GetEnv("secretKey", "")
 			if secretKey == "" {
 				log.Printf("OptionalJWTAuth: Secret key not found in environment")
 				return nil, jwt.ErrSignatureInvalid
