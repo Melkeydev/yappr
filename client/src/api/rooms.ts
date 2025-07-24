@@ -13,8 +13,19 @@ export type Room = {
 };
 
 export async function fetchRooms(): Promise<Room[]> {
-  const { data } = await api.get("/ws/getRooms");
-  return data;
+  try {
+    const { data } = await api.get("/ws/getRooms");
+    return data;
+  } catch (error: any) {
+    // If it's a 404, retry once after a short delay (proxy timing issue)
+    if (error.response?.status === 404) {
+      console.log("Retrying fetchRooms after proxy 404...");
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const { data } = await api.get("/ws/getRooms");
+      return data;
+    }
+    throw error;
+  }
 }
 
 export async function createRoom(name: string): Promise<Room> {
