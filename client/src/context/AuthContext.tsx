@@ -7,7 +7,7 @@ import {
 } from "react";
 import { api } from "../api/auth";
 
-type User = { id: string; username: string; guest?: boolean } | null;
+type User = { id: string; username: string; email?: string; guest?: boolean } | null;
 type AuthCtx = {
   user: User;
   setUser: (u: User) => void;

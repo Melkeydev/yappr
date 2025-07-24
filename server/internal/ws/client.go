@@ -18,6 +18,7 @@ type Message struct {
 	Content  string `json:"content"`
 	RoomID   string `json:"room_id"`
 	Username string `json:"username"`
+	UserID   string `json:"user_id,omitempty"`
 	System   bool   `json:"system"`
 }
 
@@ -40,6 +41,7 @@ func (c *Client) ReadMessage(core *Core) {
 			Content:  string(m),
 			RoomID:   c.RoomID,
 			Username: c.Username,
+			UserID:   c.ID,
 		}
 
 		core.Broadcast <- msg
