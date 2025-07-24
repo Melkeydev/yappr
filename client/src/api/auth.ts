@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Axios instance that always includes the cookie the backend sets
 export const api = axios.create({
-  baseURL: "", // Use empty string to use relative URLs for proxy
+  baseURL: undefined, // Force undefined to ensure relative URLs
   withCredentials: true,
   timeout: 10000, // 10 second timeout
 });
@@ -11,6 +11,8 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+    console.log(`Full URL will be: ${config.baseURL}${config.url}`);
+    console.log(`Config:`, { baseURL: config.baseURL, url: config.url });
     return config;
   },
   (error) => {
