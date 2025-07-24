@@ -108,7 +108,7 @@ export default function ProfilePage() {
                           message: "Username can only contain letters, numbers, and underscores"
                         }
                       })}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     {errors.username && (
                       <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>

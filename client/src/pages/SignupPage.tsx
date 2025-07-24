@@ -92,7 +92,7 @@ export default function SignupPage() {
                   message: "Username can only contain letters, numbers, and underscores"
                 }
               })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.username && (
               <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>
@@ -112,7 +112,7 @@ export default function SignupPage() {
                   message: "Invalid email address"
                 }
               })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.email && (
               <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
@@ -132,7 +132,7 @@ export default function SignupPage() {
                   message: "Password must be at least 6 characters"
                 }
               })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.password && (
               <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
@@ -149,7 +149,7 @@ export default function SignupPage() {
                 required: "Please confirm your password",
                 validate: value => value === watch('password') || "Passwords don't match"
               })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
