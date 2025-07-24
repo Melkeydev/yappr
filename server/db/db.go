@@ -3,8 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
 	"log"
+	
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/melkeydev/chat-go/util"
 )
 
@@ -28,19 +29,21 @@ func NewDatabase() (*sql.DB, error) {
 		)
 		
 		log.Printf("Connecting to local database: %s:%s/%s", dbHost, dbPort, dbName)
-		db, err = sql.Open("postgres", localDSN)
+		db, err = sql.Open("pgx", localDSN)
 		if err != nil {
 			log.Fatalf("Failed to open local database: %v", err)
 		}
 	} else {
-		// Production environment
+		// Production environment - pgx handles PostgreSQL URLs natively
 		connStr := util.GetEnv("CONNECTION_STRING", "")
 		if connStr == "" {
 			log.Fatal("CONNECTION_STRING must be set in production environment")
 		}
 		
-		log.Println("Connecting to production database using CONNECTION_STRING")
-		db, err = sql.Open("postgres", connStr)
+		log.Printf("Connecting to production database with pgx driver")
+		log.Printf("Connection string length: %d", len(connStr))
+		
+		db, err = sql.Open("pgx", connStr)
 		if err != nil {
 			log.Fatalf("Failed to open production database: %v", err)
 		}
