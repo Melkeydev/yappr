@@ -175,8 +175,11 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		// TODO:tighten this check!
-		CheckOrigin: func(r *http.Request) bool { return true },
+		CheckOrigin: func(r *http.Request) bool { 
+			// Allow all origins for now - TODO: tighten this check!
+			return true 
+		},
+		EnableCompression: true,
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
