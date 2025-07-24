@@ -4,14 +4,14 @@ services:
     container_name: "goChatServer"
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: DockerfileProd
     restart: unless-stopped
 
   client:
     container_name: "goChatClient"
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: DockerfileProd
     depends_on:
       - server
     restart: unless-stopped
