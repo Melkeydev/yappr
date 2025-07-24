@@ -16,15 +16,15 @@ func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int) {
 		HttpOnly: true,
 	}
 
-	if env != "prod" {
-		// Development environment
-		cookie.Secure = false
-		cookie.SameSite = http.SameSiteLaxMode
-	} else {
+	if env == "prod" {
 		// Production environment
 		cookie.Domain = ".yappr.chat"
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode
+	} else {
+		// Development environment
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteLaxMode
 	}
 
 	http.SetCookie(w, cookie)
@@ -42,13 +42,13 @@ func ClearSecureCookie(w http.ResponseWriter, name string) {
 		HttpOnly: true,
 	}
 
-	if env != "prod" {
-		cookie.Secure = false
-		cookie.SameSite = http.SameSiteLaxMode
-	} else {
+	if env == "prod" {
 		cookie.Domain = ".yappr.chat"
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode
+	} else {
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteLaxMode
 	}
 
 	http.SetCookie(w, cookie)

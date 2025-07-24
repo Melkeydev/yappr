@@ -49,8 +49,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("CreateUser - Success: user created with ID=%s, username=%s", user.ID, user.Username)
 
-	// Set JWT cookie with secure settings
-	util.SetSecureCookie(w, "jwt", user.AccessToken, 60*60*24)
+	// Set JWT cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    user.AccessToken,
+		Path:     "/",
+		MaxAge:   60 * 60 * 24,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	util.WriteJSON(w, http.StatusCreated, user)
 }
@@ -67,15 +75,30 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set JWT cookie with secure settings
-	util.SetSecureCookie(w, "jwt", user.AccessToken, 60*60*24)
+	// Set JWT cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    user.AccessToken,
+		Path:     "/",
+		MaxAge:   60 * 60 * 24,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	util.WriteJSON(w, http.StatusOK, user)
 }
 
 func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	// Clear JWT cookie with secure settings
-	util.ClearSecureCookie(w, "jwt")
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	util.WriteJSON(w, http.StatusOK, map[string]string{"message": "logout successful"})
 }
