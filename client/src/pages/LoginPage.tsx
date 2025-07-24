@@ -84,7 +84,7 @@ export default function LoginPage() {
         <div className="flex-1 text-center lg:text-left">
           <div className="mb-8">
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Anonymous Chat
+              Yappr
             </h1>
             <p className="text-xl text-gray-700 mb-6">
               Connect with others in daily topic discussions
@@ -220,7 +220,7 @@ export default function LoginPage() {
         <div className="mt-4 text-center space-y-2">
           <p className="text-xs text-gray-500">
             <Link to="/about" className="hover:text-gray-700 transition-colors">
-              Learn more about Anonymous Chat
+              Learn more about Yappr
             </Link>
           </p>
           <div className="flex justify-center space-x-4 text-xs text-gray-400">

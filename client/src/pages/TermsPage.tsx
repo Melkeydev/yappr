@@ -45,7 +45,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Acceptance of Terms</h2>
               <p>
-                By accessing or using Anonymous Chat, you agree to be bound by these Terms of Service.
+                By accessing or using Yappr, you agree to be bound by these Terms of Service.
                 If you disagree with any part of these terms, you must not use our service.
               </p>
             </section>
@@ -53,7 +53,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Service Description</h2>
               <p className="mb-4">
-                Anonymous Chat is a platform for temporary, anonymous conversations. We provide:
+                Yappr is a platform for temporary, anonymous conversations. We provide:
               </p>
               <ul className="list-disc ml-6 space-y-2">
                 <li>24-hour chat rooms with daily topic rotations</li>

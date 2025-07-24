@@ -179,7 +179,7 @@ export default function SignupPage() {
         <div className="mt-4 text-center space-y-2">
           <p className="text-xs text-gray-500">
             <Link to="/about" className="hover:text-gray-700 transition-colors">
-              Learn more about Anonymous Chat
+              Learn more about Yappr
             </Link>
           </p>
           <div className="flex justify-center space-x-4 text-xs text-gray-400">

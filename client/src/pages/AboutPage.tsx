@@ -11,7 +11,7 @@ export default function AboutPage() {
           {/* Header Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              About Anonymous Chat
+              About Yappr
             </h1>
             <p className="text-xl text-gray-700">
               A place for meaningful conversations that matter today
@@ -23,7 +23,7 @@ export default function AboutPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">What We Do</h2>
               <p className="text-lg">
-                Anonymous Chat brings people together around the most interesting topics of the day. 
+                Yappr brings people together around the most interesting topics of the day. 
                 Every 24 hours, our platform refreshes with new conversation starters pulled from 
                 trending tech news, world events, and fascinating facts that spark genuine discussions.
               </p>
