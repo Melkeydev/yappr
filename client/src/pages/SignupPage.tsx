@@ -43,7 +43,11 @@ export default function SignupPage() {
       
       if (error.response) {
         // Server responded with error status
-        errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+        if (error.response.status === 400 && error.response.data?.error?.includes("inappropriate content")) {
+          errorMessage = "Username contains inappropriate content. Please choose a different username.";
+        } else {
+          errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+        }
         console.error("Server response:", error.response.data);
       } else if (error.request) {
         // Request was made but no response received (network issues, CORS, etc.)

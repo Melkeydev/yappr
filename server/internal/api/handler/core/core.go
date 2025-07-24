@@ -11,15 +11,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/melkeydev/chat-go/internal/api/model"
+	"github.com/melkeydev/chat-go/internal/filter"
 	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
 	"github.com/melkeydev/chat-go/internal/ws"
 	"github.com/melkeydev/chat-go/util"
 )
 
 type CoreHandler struct {
-	core      *ws.Core
-	roomRepo  *roomRepo.RoomRepository
-	roomLimit int
+	core           *ws.Core
+	roomRepo       *roomRepo.RoomRepository
+	roomLimit      int
+	profanityFilter *filter.ProfanityFilter
 }
 
 func NewCoreHandler(c *ws.Core) *CoreHandler {
@@ -32,9 +34,10 @@ func NewCoreHandler(c *ws.Core) *CoreHandler {
 	}
 
 	return &CoreHandler{
-		core:      c,
-		roomRepo:  roomRepo.NewRoomRepository(c.GetDB()),
-		roomLimit: roomLimit,
+		core:           c,
+		roomRepo:       roomRepo.NewRoomRepository(c.GetDB()),
+		roomLimit:      roomLimit,
+		profanityFilter: filter.NewProfanityFilter(),
 	}
 }
 
@@ -50,6 +53,13 @@ func (h *CoreHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Creating room with name: %s", req.Name)
+
+	// Check for profanity in room name
+	if h.profanityFilter.ContainsProfanity(req.Name) {
+		log.Printf("Room creation blocked - inappropriate name: %s", req.Name)
+		util.WriteError(w, http.StatusBadRequest, "room name contains inappropriate content")
+		return
+	}
 
 	ctx := r.Context()
 

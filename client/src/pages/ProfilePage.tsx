@@ -47,6 +47,8 @@ export default function ProfilePage() {
       let errorMessage = "Failed to update username";
       if (error.response?.status === 409) {
         errorMessage = "Username already taken. Please choose another.";
+      } else if (error.response?.status === 400 && error.response?.data?.error?.includes("inappropriate content")) {
+        errorMessage = "Username contains inappropriate content. Please choose a different username.";
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.request) {

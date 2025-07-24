@@ -84,6 +84,8 @@ export default function RoomsPage() {
         showToast("Maximum number of rooms reached. Please wait for some rooms to expire.", "error");
       } else if (error.response?.status === 409) {
         showToast("You already have an active room. Please wait for it to expire before creating a new one.", "warning");
+      } else if (error.response?.status === 400 && error.response?.data?.error?.includes("inappropriate content")) {
+        showToast("Room name contains inappropriate content. Please choose a different name.", "warning");
       } else {
         const errorMessage = error.response?.data?.error || "Failed to create room. Please try again.";
         showToast(errorMessage, "error");

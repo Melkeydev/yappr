@@ -6,17 +6,20 @@ import (
 	"net/http"
 
 	"github.com/melkeydev/chat-go/internal/api/model"
+	"github.com/melkeydev/chat-go/internal/filter"
 	"github.com/melkeydev/chat-go/internal/service/user"
 	"github.com/melkeydev/chat-go/util"
 )
 
 type UserHandler struct {
-	userService *service.UserService
+	userService     *service.UserService
+	profanityFilter *filter.ProfanityFilter
 }
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{
-		userService: userService,
+		userService:     userService,
+		profanityFilter: filter.NewProfanityFilter(),
 	}
 }
 
@@ -29,6 +32,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("CreateUser - Request received: username=%s, email=%s", req.Username, req.Email)
+
+	// Check for profanity in username
+	if h.profanityFilter.ContainsProfanity(req.Username) {
+		log.Printf("CreateUser - Username blocked for inappropriate content: %s", req.Username)
+		util.WriteError(w, http.StatusBadRequest, "username contains inappropriate content")
+		return
+	}
 
 	user, err := h.userService.CreateUser(r.Context(), req)
 	if err != nil {
@@ -112,6 +122,13 @@ func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	// Validate username
 	if len(req.Username) < 3 || len(req.Username) > 20 {
 		util.WriteError(w, http.StatusBadRequest, "username must be between 3 and 20 characters")
+		return
+	}
+
+	// Check for profanity in username
+	if h.profanityFilter.ContainsProfanity(req.Username) {
+		log.Printf("UpdateUsername - Username blocked for inappropriate content: %s", req.Username)
+		util.WriteError(w, http.StatusBadRequest, "username contains inappropriate content")
 		return
 	}
 
