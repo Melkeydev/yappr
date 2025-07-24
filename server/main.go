@@ -61,13 +61,13 @@ func main() {
 
 	// run it in a separate go routine
 	go wsService.Run()
-	
+
 	// Initialize pinned rooms on startup
 	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(dbConn, wsService)
 	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(context.Background()); err != nil {
 		log.Printf("Failed to initialize pinned rooms: %v", err)
 	}
-	
+
 	// Start background job to clean up expired rooms
 	go startRoomCleanupJob(dbConn, wsService)
 
@@ -83,10 +83,10 @@ func startRoomCleanupJob(db *sql.DB, wsCore *ws.Core) {
 	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(db, wsCore)
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	
+
 	// Run cleanup immediately on startup
 	cleanupRooms(roomRepository, pinnedRoomsService)
-	
+
 	for range ticker.C {
 		cleanupRooms(roomRepository, pinnedRoomsService)
 	}
@@ -99,11 +99,11 @@ func cleanupRooms(roomRepository *roomRepo.RoomRepository, pinnedRoomsService *p
 		log.Printf("Error deleting expired rooms: %v", err)
 		return
 	}
-	
+
 	if deletedCount > 0 {
 		log.Printf("Deleted %d expired rooms", deletedCount)
 	}
-	
+
 	// Check and refresh pinned rooms if needed
 	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(ctx); err != nil {
 		log.Printf("Error refreshing pinned rooms: %v", err)
