@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
+    allowedHosts: ['yappr.chat', 'www.yappr.chat', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://server:8080',
