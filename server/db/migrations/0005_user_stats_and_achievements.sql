@@ -53,23 +53,27 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     UNIQUE(user_id, achievement_type_id)
 );
 
--- Indexes for performance
-CREATE INDEX idx_user_stats_user_id ON user_stats(user_id);
-CREATE INDEX idx_daily_checkins_user_id ON daily_checkins(user_id);
-CREATE INDEX idx_daily_checkins_date ON daily_checkins(checkin_date);
-CREATE INDEX idx_upvotes_from_user ON upvotes(from_user_id);
-CREATE INDEX idx_upvotes_to_user ON upvotes(to_user_id);
-CREATE INDEX idx_user_achievements_user_id ON user_achievements(user_id);
+-- Indexes for performance (with IF NOT EXISTS checks)
+CREATE INDEX IF NOT EXISTS idx_user_stats_user_id ON user_stats(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_checkins_user_id ON daily_checkins(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_checkins_date ON daily_checkins(checkin_date);
+CREATE INDEX IF NOT EXISTS idx_upvotes_from_user ON upvotes(from_user_id);
+CREATE INDEX IF NOT EXISTS idx_upvotes_to_user ON upvotes(to_user_id);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id);
 
--- Insert default achievement types
-INSERT INTO achievement_types (name, description, icon, threshold_type, threshold_value) VALUES
-('First Steps', 'Complete your first daily check-in', '🌟', 'streak', 1),
-('Weekly Warrior', 'Maintain a 7-day streak', '🔥', 'streak', 7),
-('Monthly Master', 'Maintain a 30-day streak', '👑', 'streak', 30),
-('Chatter', 'Send your first 10 messages', '💬', 'messages', 10),
-('Conversationalist', 'Send 100 messages', '🗣️', 'messages', 100),
-('Popular', 'Receive your first 5 upvotes', '⭐', 'upvotes', 5),
-('Beloved', 'Receive 25 upvotes', '💖', 'upvotes', 25);
+-- Insert default achievement types (only if they don't exist)
+INSERT INTO achievement_types (name, description, icon, threshold_type, threshold_value) 
+SELECT name, description, icon, threshold_type, threshold_value
+FROM (VALUES 
+    ('First Steps', 'Complete your first daily check-in', '🌟', 'streak', 1),
+    ('Weekly Warrior', 'Maintain a 7-day streak', '🔥', 'streak', 7),
+    ('Monthly Master', 'Maintain a 30-day streak', '👑', 'streak', 30),
+    ('Chatter', 'Send your first 10 messages', '💬', 'messages', 10),
+    ('Conversationalist', 'Send 100 messages', '🗣️', 'messages', 100),
+    ('Popular', 'Receive your first 5 upvotes', '⭐', 'upvotes', 5),
+    ('Beloved', 'Receive 25 upvotes', '💖', 'upvotes', 25)
+) AS new_achievements(name, description, icon, threshold_type, threshold_value)
+WHERE NOT EXISTS (SELECT 1 FROM achievement_types WHERE achievement_types.name = new_achievements.name);
 
 -- +goose StatementEnd
 
