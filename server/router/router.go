@@ -16,12 +16,13 @@ import (
 func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler, statsH *statshandler.StatsHandler) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequestID)
+	// Global middleware (order matters!)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://127.0.0.1:3000", "https://yappr.chat", "http://yappr.chat"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
