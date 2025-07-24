@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Axios instance that always includes the cookie the backend sets
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "", // Use empty string to use relative URLs for proxy
+  baseURL: "", // Use empty string to use relative URLs for proxy
   withCredentials: true,
   timeout: 10000, // 10 second timeout
 });
