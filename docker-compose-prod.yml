@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  server:
+    container_name: "goChatServer"
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  client:
+    container_name: "goChatClient"
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    depends_on:
+      - server
+    restart: unless-stopped
