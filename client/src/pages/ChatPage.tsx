@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import useChatSocket from "../hooks/useChatSocket";
 import MessageBubble from "../components/MessageBubble";
+import UserProfileModal from "../components/UserProfile";
 import { fetchRooms } from "../api/rooms";
 import { useToast } from "../context/ToastContext";
 
@@ -13,6 +14,7 @@ export default function ChatPage() {
   const { messages, sendMessage } = useChatSocket(roomId);
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState<any>(null);
+  const [profileModal, setProfileModal] = useState<{userId: string, username: string} | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const { showToast } = useToast();
 
@@ -57,6 +59,10 @@ export default function ChatPage() {
       e.preventDefault();
       handleSend();
     }
+  }
+
+  function handleUsernameClick(userId: string, username: string) {
+    setProfileModal({ userId, username });
   }
 
   return (
@@ -105,6 +111,8 @@ export default function ChatPage() {
               text={m.content}
               mine={m.username === user?.username}
               username={m.username}
+              userId={m.user_id}
+              onUsernameClick={handleUsernameClick}
             />
           </div>
         ))}
@@ -129,6 +137,16 @@ export default function ChatPage() {
           Send
         </button>
       </div>
+      
+      {/* User Profile Modal */}
+      {profileModal && (
+        <UserProfileModal
+          userId={profileModal.userId}
+          username={profileModal.username}
+          isOpen={true}
+          onClose={() => setProfileModal(null)}
+        />
+      )}
     </div>
   );
 }

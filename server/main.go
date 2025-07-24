@@ -12,10 +12,13 @@ import (
 	"github.com/melkeydev/chat-go/db"
 	"github.com/melkeydev/chat-go/db/migrations"
 	coreHandler "github.com/melkeydev/chat-go/internal/api/handler/core"
+	statsHandler "github.com/melkeydev/chat-go/internal/api/handler/stats"
 	userHandler "github.com/melkeydev/chat-go/internal/api/handler/user"
 	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
+	statsRepo "github.com/melkeydev/chat-go/internal/repo/stats"
 	repository "github.com/melkeydev/chat-go/internal/repo/user"
 	"github.com/melkeydev/chat-go/internal/service/pinnedrooms"
+	statsService "github.com/melkeydev/chat-go/internal/service/stats"
 	service "github.com/melkeydev/chat-go/internal/service/user"
 	"github.com/melkeydev/chat-go/internal/ws"
 	"github.com/melkeydev/chat-go/router"
@@ -45,14 +48,17 @@ func main() {
 
 	// Set up Repositories
 	userRepo := repository.NewUserRepository(dbConn)
+	statsRepository := statsRepo.NewStatsRepository(dbConn)
 
 	// Set up Services
 	userService := service.NewUserService(userRepo)
+	statsServ := statsService.NewStatsService(statsRepository)
 	wsService := ws.NewCore(dbConn)
 
 	// Set up Handlers
 	userHandler := userHandler.NewUserHandler(userService)
 	coreHandler := coreHandler.NewCoreHandler(wsService)
+	statsHand := statsHandler.NewStatsHandler(statsServ)
 
 	// run it in a separate go routine
 	go wsService.Run()
@@ -66,7 +72,7 @@ func main() {
 	// Start background job to clean up expired rooms
 	go startRoomCleanupJob(dbConn, wsService)
 
-	router := router.SetupRouter(userHandler, coreHandler)
+	router := router.SetupRouter(userHandler, coreHandler, statsHand)
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

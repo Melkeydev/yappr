@@ -4,9 +4,11 @@ type Props = {
   text: string;
   mine: boolean;
   username: string;
+  userId?: string;
+  onUsernameClick?: (userId: string, username: string) => void;
 };
 
-export default function MessageBubble({ text, mine, username }: Props) {
+export default function MessageBubble({ text, mine, username, userId, onUsernameClick }: Props) {
   return (
     <div
       className={clsx(
@@ -17,7 +19,18 @@ export default function MessageBubble({ text, mine, username }: Props) {
       )}
     >
       {!mine && (
-        <p className="mb-1 text-xs font-semibold text-indigo-600">{username}</p>
+        <p className="mb-1 text-xs font-semibold text-indigo-600">
+          {userId && onUsernameClick ? (
+            <button
+              onClick={() => onUsernameClick(userId, username)}
+              className="hover:text-indigo-800 hover:underline transition-colors cursor-pointer"
+            >
+              {username}
+            </button>
+          ) : (
+            username
+          )}
+        </p>
       )}
       <p className="whitespace-pre-wrap break-words">{text}</p>
     </div>

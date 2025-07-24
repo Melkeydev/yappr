@@ -8,11 +8,12 @@ import (
 	"github.com/go-chi/cors"
 
 	corehandler "github.com/melkeydev/chat-go/internal/api/handler/core"
+	statshandler "github.com/melkeydev/chat-go/internal/api/handler/stats"
 	userhandler "github.com/melkeydev/chat-go/internal/api/handler/user"
 	authmiddleware "github.com/melkeydev/chat-go/middleware"
 )
 
-func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler) http.Handler {
+func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler, statsH *statshandler.StatsHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -37,6 +38,21 @@ func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler)
 		u.Group(func(r chi.Router) {
 			r.Use(authmiddleware.JWTAuth)
 			r.Put("/username", userH.UpdateUsername)
+		})
+	})
+
+	r.Route("/api/stats", func(s chi.Router) {
+		// Protected routes requiring authentication
+		s.Group(func(r chi.Router) {
+			r.Use(authmiddleware.JWTAuth)
+			r.Post("/checkin", statsH.CheckIn)
+			r.Post("/upvote", statsH.GiveUpvote)
+		})
+		
+		// Public routes (with optional auth for viewing permissions)
+		s.Group(func(r chi.Router) {
+			r.Use(authmiddleware.OptionalJWTAuth)
+			r.Get("/profile/{userId}", statsH.GetUserProfile)
 		})
 	})
 

@@ -3,7 +3,7 @@ import { createContext, useContext, useState, ReactNode, useCallback } from 'rea
 interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: 'success' | 'error' | 'warning' | 'info' | 'golden';
   duration?: number;
 }
 

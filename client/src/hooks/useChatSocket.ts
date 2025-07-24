@@ -6,6 +6,7 @@ export type ChatMessage = {
   content: string;
   room_id: string;
   username: string;
+  user_id?: string;
 };
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";

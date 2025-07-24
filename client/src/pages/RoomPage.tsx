@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchRooms, createRoom, type Room } from "../api/rooms";
+import { performDailyCheckin } from "../api/stats";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -16,7 +17,11 @@ export default function RoomsPage() {
 
   useEffect(() => {
     refresh();
-  }, []);
+    // Trigger daily check-in for authenticated users
+    if (user && !user.guest) {
+      handleDailyCheckin();
+    }
+  }, [user]);
 
   // Update current time every minute for time remaining calculations
   useEffect(() => {
@@ -34,6 +39,21 @@ export default function RoomsPage() {
     } catch (error: any) {
       console.error("Failed to fetch rooms:", error);
       showToast("Failed to load rooms. Please refresh the page.", "error");
+    }
+  }
+
+  async function handleDailyCheckin() {
+    try {
+      const result = await performDailyCheckin();
+      if (result.is_new_checkin) {
+        const streakMessage = result.streak_count === 1 
+          ? "+1 Daily check-in" 
+          : `+${result.streak_count} Daily check-in`;
+        showToast(streakMessage, "golden", 7000);
+      }
+    } catch (error: any) {
+      // Silently fail check-ins to not interrupt user experience
+      console.error("Daily check-in failed:", error);
     }
   }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
+	statsRepo "github.com/melkeydev/chat-go/internal/repo/stats"
 )
 
 type Room struct {
@@ -27,6 +28,7 @@ type Core struct {
 	Unregister chan *Client
 	Broadcast  chan *Message
 	roomRepo   *roomRepo.RoomRepository
+	statsRepo  *statsRepo.StatsRepository
 	db         *sql.DB
 }
 
@@ -37,6 +39,7 @@ func NewCore(db *sql.DB) *Core {
 		Unregister: make(chan *Client),
 		Broadcast:  make(chan *Message, 5),
 		roomRepo:   roomRepo.NewRoomRepository(db),
+		statsRepo:  statsRepo.NewStatsRepository(db),
 		db:         db,
 	}
 }
@@ -69,10 +72,16 @@ func (c *Core) Run() {
 					}
 					
 					for _, msg := range messages {
+						userID := ""
+						if msg.UserID != nil {
+							userID = msg.UserID.String()
+						}
+						
 						wsMsg := &Message{
 							Content:  msg.Content,
 							RoomID:   cl.RoomID,
 							Username: msg.Username,
+							UserID:   userID,
 							System:   msg.IsSystem,
 						}
 						cl.Message <- wsMsg
@@ -101,17 +110,32 @@ func (c *Core) Run() {
 						return
 					}
 					
+					// Parse user ID for database storage
+					var userID *uuid.UUID
+					if msg.UserID != "" {
+						if parsedUserID, err := uuid.Parse(msg.UserID); err == nil {
+							userID = &parsedUserID
+						}
+					}
+					
 					dbMsg := &roomRepo.Message{
 						RoomID:   roomUUID,
+						UserID:   userID,
 						Username: msg.Username,
 						Content:  msg.Content,
 						IsSystem: msg.System,
 					}
 					
-					// Try to parse user ID if it's in the username format
-					// This is a placeholder - you might want to pass actual user ID
+					// Save message to database
 					if _, err := c.roomRepo.CreateMessage(context.Background(), dbMsg); err != nil {
 						log.Printf("Failed to persist message: %v", err)
+					}
+					
+					// Update user stats if user is authenticated
+					if userID != nil {
+						if err := c.statsRepo.IncrementMessageCount(context.Background(), *userID); err != nil {
+							log.Printf("Failed to update message count for user %s: %v", userID.String(), err)
+						}
 					}
 				}(m)
 				
