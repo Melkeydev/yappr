@@ -10,6 +10,7 @@ export type ChatMessage = {
 };
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";
+console.log("this is WS_URL: ", WS_URL);
 
 export default function useChatSocket(roomId: string) {
   const { user } = useAuth();
@@ -42,11 +43,13 @@ export default function useChatSocket(roomId: string) {
         // Check if it's a normal close with error status
         if (event.code === 1008 || event.code === 1003) {
           // Room doesn't exist or expired
-          alert("This room has expired or doesn't exist. Redirecting to room list...");
+          alert(
+            "This room has expired or doesn't exist. Redirecting to room list...",
+          );
           navigate("/rooms");
           return;
         }
-        
+
         if (shouldReconnect && retries < 5) {
           retries += 1;
           setTimeout(connect, 500 * retries); // simple back-off
