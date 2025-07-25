@@ -9,7 +9,7 @@ export type ChatMessage = {
   user_id?: string;
 };
 
-const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";
+const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "wss://server.yappr.chat";
 console.log("this is WS_URL: ", WS_URL);
 console.log("this is L: ", import.meta.env.VITE_WEBSOCKET_URL);
 

@@ -3,6 +3,8 @@ import axios from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://server.yappr.chat";
 
+console.log(API_BASE_URL, "this is base URL");
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
