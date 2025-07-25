@@ -11,6 +11,7 @@ export type ChatMessage = {
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";
 console.log("this is WS_URL: ", WS_URL);
+console.log("this is L: ", import.meta.env.VITE_WEBSOCKET_URL);
 
 export default function useChatSocket(roomId: string) {
   const { user } = useAuth();
