@@ -1,12 +1,11 @@
-FROM node:18-buster
-
+FROM node:20-alpine
 WORKDIR /app
 
-COPY client/package.json ./
+# context is ./client, so:
+COPY package*.json ./
+RUN npm ci
 
-RUN npm install 
-
-COPY client/ ./
+COPY . .
 RUN npm run build
 
 EXPOSE 3000
