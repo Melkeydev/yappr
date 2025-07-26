@@ -28,12 +28,9 @@ func NewPinnedRoomsService(db *sql.DB, wsCore *ws.Core) *PinnedRoomsService {
 
 // getNextMidnightUTC returns the next midnight UTC time
 func getNextMidnightUTC() time.Time {
-	// TEMPORARY: Changed to 2 minutes for debugging
-	return time.Now().Add(2 * time.Minute)
-	// Original code:
-	// now := time.Now().UTC()
-	// midnight := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.UTC)
-	// return midnight
+	now := time.Now().UTC()
+	midnight := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.UTC)
+	return midnight
 }
 
 // RefreshPinnedRooms creates new pinned rooms with fresh topics
@@ -69,23 +66,11 @@ func (s *PinnedRoomsService) RefreshPinnedRooms(ctx context.Context) error {
 			ExpiresAt:        expiresAt,
 		}
 
-		log.Printf("Creating pinned room %s with topic data:", roomNames[i])
-		log.Printf("  Title: %v", room.TopicTitle)
-		log.Printf("  Description: %v", room.TopicDescription)
-		log.Printf("  URL: %v", room.TopicURL)
-		log.Printf("  Source: %v", room.TopicSource)
-		
 		createdRoom, err := s.roomRepo.CreateRoom(ctx, room)
 		if err != nil {
 			log.Printf("Failed to create pinned room %s: %v", roomNames[i], err)
 			continue
 		}
-		
-		log.Printf("Created room in DB with ID: %s", createdRoom.ID.String())
-		log.Printf("  DB Title: %v", createdRoom.TopicTitle)
-		log.Printf("  DB Description: %v", createdRoom.TopicDescription)
-		log.Printf("  DB URL: %v", createdRoom.TopicURL)
-		log.Printf("  DB Source: %v", createdRoom.TopicSource)
 
 		// Add to WebSocket core's in-memory map
 		s.wsCore.Rooms[createdRoom.ID.String()] = &ws.Room{

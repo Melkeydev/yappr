@@ -17,9 +17,9 @@ import (
 )
 
 type CoreHandler struct {
-	core           *ws.Core
-	roomRepo       *roomRepo.RoomRepository
-	roomLimit      int
+	core            *ws.Core
+	roomRepo        *roomRepo.RoomRepository
+	roomLimit       int
 	profanityFilter *filter.ProfanityFilter
 }
 
@@ -33,9 +33,9 @@ func NewCoreHandler(c *ws.Core) *CoreHandler {
 	}
 
 	return &CoreHandler{
-		core:           c,
-		roomRepo:       roomRepo.NewRoomRepository(c.GetDB()),
-		roomLimit:      roomLimit,
+		core:            c,
+		roomRepo:        roomRepo.NewRoomRepository(c.GetDB()),
+		roomLimit:       roomLimit,
 		profanityFilter: filter.NewProfanityFilter(),
 	}
 }
@@ -68,7 +68,7 @@ func (h *CoreHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Found user ID in context: %s", userIDStr)
 		if uid, err := uuid.Parse(userIDStr); err == nil {
 			creatorID = &uid
-			
+
 			// Check if user already has an active room
 			hasRoom, err := h.roomRepo.HasActiveRoom(ctx, uid)
 			if err != nil {
@@ -175,9 +175,9 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool { 
+		CheckOrigin: func(r *http.Request) bool {
 			// Allow all origins for now - TODO: tighten this check!
-			return true 
+			return true
 		},
 		EnableCompression: true,
 	}
@@ -210,28 +210,15 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 func (h *CoreHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	log.Printf("=== GetRooms called ===")
-	log.Printf("Environment: %s", util.GetEnv("ENVIRONMENT", "dev"))
-	
 	// Fetch active rooms from database
 	dbRooms, err := h.roomRepo.GetAllActiveRooms(ctx)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, "failed to fetch rooms")
 		return
 	}
-	
-	log.Printf("Fetched %d rooms from database", len(dbRooms))
 
 	rooms := make([]model.RoomRes, 0, len(dbRooms))
 	for _, room := range dbRooms {
-		if room.IsPinned {
-			log.Printf("Processing pinned room: %s", room.Name)
-			log.Printf("  DB TopicTitle: %v", room.TopicTitle)
-			log.Printf("  DB TopicDescription: %v", room.TopicDescription)
-			log.Printf("  DB TopicURL: %v", room.TopicURL)
-			log.Printf("  DB TopicSource: %v", room.TopicSource)
-		}
-		
 		rooms = append(rooms, model.RoomRes{
 			ID:               room.ID.String(),
 			Name:             room.Name,

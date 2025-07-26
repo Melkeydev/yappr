@@ -19,7 +19,6 @@ import (
 	repository "github.com/melkeydev/chat-go/internal/repo/user"
 	"github.com/melkeydev/chat-go/internal/service/pinnedrooms"
 	statsService "github.com/melkeydev/chat-go/internal/service/stats"
-	"github.com/melkeydev/chat-go/internal/service/topics"
 	service "github.com/melkeydev/chat-go/internal/service/user"
 	"github.com/melkeydev/chat-go/internal/ws"
 	"github.com/melkeydev/chat-go/router"
@@ -60,43 +59,12 @@ func main() {
 	coreHandler := coreHandler.NewCoreHandler(wsService)
 	statsHand := statsHandler.NewStatsHandler(statsServ)
 
-	// run it in a separate go routine
 	go wsService.Run()
 
-	// Initialize pinned rooms on startup
 	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(dbConn, wsService)
 	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(context.Background()); err != nil {
 		log.Printf("Failed to initialize pinned rooms: %v", err)
 	}
-
-	// TEST: Call topic APIs directly
-	log.Println("=== TESTING TOPIC APIS ===")
-	topicService := topics.NewTopicService()
-	
-	log.Println("Fetching HackerNews...")
-	hnTopic, err := topicService.FetchHackerNewsTop(context.Background())
-	if err != nil {
-		log.Printf("HN Error: %v", err)
-	} else {
-		log.Printf("HN Success: %+v", hnTopic)
-	}
-	
-	log.Println("Fetching Reddit WorldNews...")
-	worldTopic, err := topicService.FetchRedditWorldNews(context.Background())
-	if err != nil {
-		log.Printf("WorldNews Error: %v", err)
-	} else {
-		log.Printf("WorldNews Success: %+v", worldTopic)
-	}
-	
-	log.Println("Fetching Reddit TIL...")
-	tilTopic, err := topicService.FetchRedditTIL(context.Background())
-	if err != nil {
-		log.Printf("TIL Error: %v", err)
-	} else {
-		log.Printf("TIL Success: %+v", tilTopic)
-	}
-	log.Println("=== END TOPIC API TEST ===")
 
 	// Start background job to clean up expired rooms
 	go startRoomCleanupJob(dbConn, wsService)
@@ -107,15 +75,12 @@ func main() {
 	}
 }
 
-// startRoomCleanupJob runs a background job that deletes expired rooms every 5 minutes
 func startRoomCleanupJob(db *sql.DB, wsCore *ws.Core) {
 	roomRepository := roomRepo.NewRoomRepository(db)
 	pinnedRoomsService := pinnedrooms.NewPinnedRoomsService(db, wsCore)
-	// TEMPORARY: Changed to 30 seconds for debugging
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	// Run cleanup immediately on startup
 	cleanupRooms(roomRepository, pinnedRoomsService)
 
 	for range ticker.C {
@@ -124,7 +89,6 @@ func startRoomCleanupJob(db *sql.DB, wsCore *ws.Core) {
 }
 
 func cleanupRooms(roomRepository *roomRepo.RoomRepository, pinnedRoomsService *pinnedrooms.PinnedRoomsService) {
-	log.Println("Running room cleanup job...")
 	ctx := context.Background()
 	deletedCount, err := roomRepository.DeleteExpiredRooms(ctx)
 	if err != nil {
@@ -136,8 +100,6 @@ func cleanupRooms(roomRepository *roomRepo.RoomRepository, pinnedRoomsService *p
 		log.Printf("Deleted %d expired rooms", deletedCount)
 	}
 
-	// Check and refresh pinned rooms if needed
-	log.Println("Checking pinned rooms...")
 	if err := pinnedRoomsService.CheckAndRefreshPinnedRooms(ctx); err != nil {
 		log.Printf("Error refreshing pinned rooms: %v", err)
 	}
