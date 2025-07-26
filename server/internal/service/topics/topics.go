@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -29,7 +30,6 @@ func NewTopicService() *TopicService {
 	}
 }
 
-// cleanText decodes HTML entities and trims whitespace from text
 func cleanText(text string) string {
 	// Decode HTML entities like &amp;, &lt;, &gt;, &quot;, etc.
 	decoded := html.UnescapeString(text)
@@ -37,9 +37,30 @@ func cleanText(text string) string {
 	return strings.TrimSpace(decoded)
 }
 
-// FetchHackerNewsTop fetches the top story from Hacker News
+const redditUA = "desktop:gochat:1.0 (by /u/melkeydev)" // Reddit's preferred UA format
+
+func (s *TopicService) getRedditJSON(ctx context.Context, url string, out any) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("User-Agent", redditUA)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return fmt.Errorf("reddit %s -> %d: %s", url, resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+	return json.NewDecoder(resp.Body).Decode(out)
+}
+
 func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
-	// Get top story IDs
 	resp, err := s.client.Get("https://hacker-news.firebaseio.com/v0/topstories.json")
 	if err != nil {
 		return nil, fmt.Errorf("fetch HN top stories: %w", err)
@@ -55,7 +76,6 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 		return nil, fmt.Errorf("no HN stories found")
 	}
 
-	// Get the top story details
 	storyURL := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%d.json", storyIDs[0])
 	resp, err = s.client.Get(storyURL)
 	if err != nil {
@@ -74,9 +94,6 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 		return nil, fmt.Errorf("decode HN story: %w", err)
 	}
 
-	fmt.Printf("HackerNews API Response: %+v\n", story)
-
-	// If no URL, it's a text post - link to HN discussion
 	if story.URL == "" {
 		story.URL = fmt.Sprintf("https://news.ycombinator.com/item?id=%d", story.ID)
 	}
@@ -88,24 +105,11 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 		Source:      "HackerNews",
 	}
 
-	fmt.Printf("HackerNews Topic: %+v\n", topic)
-
 	return topic, nil
 }
 
-// FetchRedditWorldNews fetches the top post from r/worldnews
 func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error) {
-	req, err := http.NewRequest("GET", "https://www.reddit.com/r/worldnews/top.json?limit=1&t=day", nil)
-	if err != nil {
-		return nil, fmt.Errorf("create Reddit worldnews request: %w", err)
-	}
-	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/melkeydev)")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fetch Reddit worldnews: %w", err)
-	}
-	defer resp.Body.Close()
+	url := "https://www.reddit.com/r/worldnews/top.json?limit=1&t=day&raw_json=1"
 
 	var redditResp struct {
 		Data struct {
@@ -121,47 +125,24 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 		} `json:"data"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&redditResp); err != nil {
-		return nil, fmt.Errorf("decode Reddit response: %w", err)
+	if err := s.getRedditJSON(ctx, url, &redditResp); err != nil {
+		return nil, fmt.Errorf("fetch Reddit worldnews: %w", err)
 	}
-
 	if len(redditResp.Data.Children) == 0 {
-		return nil, fmt.Errorf("no Reddit posts found")
+		return nil, fmt.Errorf("reddit worldnews: empty children")
 	}
 
 	post := redditResp.Data.Children[0].Data
-	fmt.Printf("Reddit WorldNews API Response: %+v\n", post)
-
-	// Use Reddit URL for discussion
-	redditURL := "https://reddit.com" + post.Permalink
-
-	topic := &Topic{
+	return &Topic{
 		Title:       cleanText(post.Title),
 		Description: fmt.Sprintf("Top world news with %d upvotes", post.Score),
-		URL:         redditURL,
+		URL:         "https://reddit.com" + post.Permalink,
 		Source:      "Reddit WorldNews",
-	}
-
-	fmt.Printf("Reddit WorldNews Topic: %+v\n", topic)
-
-	return topic, nil
+	}, nil
 }
 
-// FetchRedditTIL fetches the top post from r/todayilearned
 func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
-	req, err := http.NewRequest("GET", "https://www.reddit.com/r/todayilearned/top.json?limit=1&t=day", nil)
-	if err != nil {
-		return nil, fmt.Errorf("create Reddit TIL request: %w", err)
-	}
-	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/melkeydev)")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fetch Reddit TIL: %w", err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Println("this is response: ", resp)
+	url := "https://www.reddit.com/r/todayilearned/top.json?limit=1&t=day&raw_json=1"
 
 	var redditResp struct {
 		Data struct {
@@ -176,30 +157,20 @@ func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
 		} `json:"data"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&redditResp); err != nil {
-		return nil, fmt.Errorf("decode Reddit TIL response: %w", err)
+	if err := s.getRedditJSON(ctx, url, &redditResp); err != nil {
+		return nil, fmt.Errorf("fetch Reddit TIL: %w", err)
 	}
-
 	if len(redditResp.Data.Children) == 0 {
-		return nil, fmt.Errorf("no Reddit TIL posts found")
+		return nil, fmt.Errorf("reddit TIL: empty children")
 	}
 
 	post := redditResp.Data.Children[0].Data
-	fmt.Printf("Reddit TIL API Response: %+v\n", post)
-
-	// Use Reddit URL for discussion
-	redditURL := "https://reddit.com" + post.Permalink
-
-	topic := &Topic{
+	return &Topic{
 		Title:       cleanText(post.Title),
 		Description: fmt.Sprintf("Today's top learning with %d upvotes", post.Score),
-		URL:         redditURL,
+		URL:         "https://reddit.com" + post.Permalink,
 		Source:      "Reddit TIL",
-	}
-
-	fmt.Printf("Reddit TIL Topic: %+v\n", topic)
-
-	return topic, nil
+	}, nil
 }
 
 // FetchAllTopics fetches topics from all sources
@@ -221,11 +192,9 @@ func (s *TopicService) FetchAllTopics(ctx context.Context) ([]Topic, error) {
 		topics = append(topics, *hnTopic)
 	}
 
-	// Fetch Reddit World News
 	worldTopic, err := s.FetchRedditWorldNews(ctx)
 	if err != nil {
 		fmt.Printf("Error fetching Reddit WorldNews topic: %v\n", err)
-		// Use fallback topic
 		topics = append(topics, Topic{
 			Title:       "World News Discussion",
 			Description: "Discuss today's global news",
@@ -236,11 +205,9 @@ func (s *TopicService) FetchAllTopics(ctx context.Context) ([]Topic, error) {
 		topics = append(topics, *worldTopic)
 	}
 
-	// Fetch Reddit TIL
 	tilTopic, err := s.FetchRedditTIL(ctx)
 	if err != nil {
 		fmt.Printf("Error fetching Reddit TIL topic: %v\n", err)
-		// Use fallback topic
 		topics = append(topics, Topic{
 			Title:       "Today I Learned",
 			Description: "Share interesting facts",
