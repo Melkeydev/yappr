@@ -1,9 +1,9 @@
 <p align="center">
+  <img src="client/public/go-chat-logo.png" alt="Yappr Logo" width="80" height="80">
   <h1 align="center"><b>Yappr</b></h1>
 </p>
 <p align="center">Real-time chat rooms that disappear after 24 hours.</p>
 <p align="center">
-  <a href="https://github.com/melkeydev/go-chat-app/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/melkeydev/go-chat-app?style=flat-square" /></a>
   <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go" /></a>
   <a href="https://react.dev"><img alt="React" src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react" /></a>
 </p>
@@ -34,6 +34,7 @@ docker-compose up
 ### Development
 
 #### Backend (Go)
+
 ```bash
 cd server
 go mod download
@@ -41,6 +42,7 @@ go run main.go
 ```
 
 #### Frontend (React)
+
 ```bash
 cd client
 npm install
@@ -50,6 +52,7 @@ npm run dev
 ### Environment Variables
 
 #### Server
+
 ```env
 secretKey=your-jwt-secret
 MAX_ROOMS=50
@@ -58,6 +61,7 @@ REDDIT_CLIENT_SECRET=your-reddit-client-secret
 ```
 
 #### Client
+
 ```env
 VITE_API_BASE_URL=http://localhost:8080
 VITE_WEBSOCKET_URL=ws://localhost:8080
@@ -80,3 +84,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ by [Melkey](https://github.com/melkeydev)**
+
