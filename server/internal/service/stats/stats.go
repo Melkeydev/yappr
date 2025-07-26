@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	statsRepo "github.com/melkeydev/chat-go/internal/repo/stats"
+	statsRepo "github.com/Melkeydev/yappr/internal/repo/stats"
 )
 
 type StatsService struct {

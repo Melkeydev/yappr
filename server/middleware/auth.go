@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/melkeydev/chat-go/util"
+	"github.com/Melkeydev/yappr/util"
 )
 
 func JWTAuth(next http.Handler) http.Handler {

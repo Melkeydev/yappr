@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/melkeydev/chat-go/internal/api/model"
-	"github.com/melkeydev/chat-go/internal/filter"
-	"github.com/melkeydev/chat-go/internal/service/user"
-	"github.com/melkeydev/chat-go/util"
+	"github.com/Melkeydev/yappr/internal/api/model"
+	"github.com/Melkeydev/yappr/internal/filter"
+	"github.com/Melkeydev/yappr/internal/service/user"
+	"github.com/Melkeydev/yappr/util"
 )
 
 type UserHandler struct {

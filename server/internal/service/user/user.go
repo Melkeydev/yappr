@@ -9,9 +9,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	model "github.com/melkeydev/chat-go/internal/api/model"
-	repo "github.com/melkeydev/chat-go/internal/repo/user"
-	"github.com/melkeydev/chat-go/util"
+	model "github.com/Melkeydev/yappr/internal/api/model"
+	repo "github.com/Melkeydev/yappr/internal/repo/user"
+	"github.com/Melkeydev/yappr/util"
 )
 
 type JWTClaims struct {

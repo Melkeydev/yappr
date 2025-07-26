@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	statsService "github.com/melkeydev/chat-go/internal/service/stats"
-	"github.com/melkeydev/chat-go/util"
+	statsService "github.com/Melkeydev/yappr/internal/service/stats"
+	"github.com/Melkeydev/yappr/util"
 )
 
 type StatsHandler struct {

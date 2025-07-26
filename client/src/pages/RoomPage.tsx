@@ -21,13 +21,6 @@ export default function RoomsPage() {
     if (user && !user.guest && !hasCheckedIn) {
       handleDailyCheckin();
       setHasCheckedIn(true);
-      // Show helpful toast for new users
-      const hasCreatedRoom = localStorage.getItem('hasCreatedRoom');
-      if (!hasCreatedRoom) {
-        setTimeout(() => {
-          showToast("💡 Create your own room to start chatting!", "info", 8000);
-        }, 2000);
-      }
     }
   }, [user, hasCheckedIn]);
 
@@ -86,7 +79,6 @@ export default function RoomsPage() {
       const room = await createRoom(newName.trim());
       setNewName("");
       showToast(`Room "${room.name}" created successfully!`, "success");
-      localStorage.setItem('hasCreatedRoom', 'true');
       await refresh();
     } catch (error: any) {
       if (error.response?.status === 429) {

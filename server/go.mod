@@ -1,4 +1,4 @@
-module github.com/melkeydev/chat-go
+module github.com/Melkeydev/yappr
 
 go 1.24.4
 

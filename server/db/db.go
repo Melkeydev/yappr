@@ -6,7 +6,7 @@ import (
 	"log"
 	
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/melkeydev/chat-go/util"
+	"github.com/Melkeydev/yappr/util"
 )
 
 func NewDatabase() (*sql.DB, error) {

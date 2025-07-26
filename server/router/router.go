@@ -7,10 +7,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	corehandler "github.com/melkeydev/chat-go/internal/api/handler/core"
-	statshandler "github.com/melkeydev/chat-go/internal/api/handler/stats"
-	userhandler "github.com/melkeydev/chat-go/internal/api/handler/user"
-	authmiddleware "github.com/melkeydev/chat-go/middleware"
+	corehandler "github.com/Melkeydev/yappr/internal/api/handler/core"
+	statshandler "github.com/Melkeydev/yappr/internal/api/handler/stats"
+	userhandler "github.com/Melkeydev/yappr/internal/api/handler/user"
+	authmiddleware "github.com/Melkeydev/yappr/middleware"
 )
 
 func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler, statsH *statshandler.StatsHandler) http.Handler {

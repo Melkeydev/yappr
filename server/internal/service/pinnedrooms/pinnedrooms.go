@@ -7,9 +7,9 @@ import (
 	"log"
 	"time"
 
-	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
-	"github.com/melkeydev/chat-go/internal/service/topics"
-	"github.com/melkeydev/chat-go/internal/ws"
+	roomRepo "github.com/Melkeydev/yappr/internal/repo/room"
+	"github.com/Melkeydev/yappr/internal/service/topics"
+	"github.com/Melkeydev/yappr/internal/ws"
 )
 
 type PinnedRoomsService struct {

@@ -9,11 +9,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/melkeydev/chat-go/internal/api/model"
-	"github.com/melkeydev/chat-go/internal/filter"
-	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
-	"github.com/melkeydev/chat-go/internal/ws"
-	"github.com/melkeydev/chat-go/util"
+	"github.com/Melkeydev/yappr/internal/api/model"
+	"github.com/Melkeydev/yappr/internal/filter"
+	roomRepo "github.com/Melkeydev/yappr/internal/repo/room"
+	"github.com/Melkeydev/yappr/internal/ws"
+	"github.com/Melkeydev/yappr/util"
 )
 
 type CoreHandler struct {

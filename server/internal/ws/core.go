@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	roomRepo "github.com/melkeydev/chat-go/internal/repo/room"
-	statsRepo "github.com/melkeydev/chat-go/internal/repo/stats"
+	roomRepo "github.com/Melkeydev/yappr/internal/repo/room"
+	statsRepo "github.com/Melkeydev/yappr/internal/repo/stats"
 )
 
 type Room struct {
