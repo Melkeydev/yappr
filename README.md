@@ -78,6 +78,18 @@ VITE_WEBSOCKET_URL=ws://localhost:8080
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS
 - **Infrastructure**: Docker, Docker Compose
 
+### Achievements
+
+🎯 **Unlock achievements as you chat!**
+
+1. 🌟 **First Steps** - Complete your first daily check-in (1 day)
+2. 🔥 **Weekly Warrior** - Maintain a 7-day streak
+3. 👑 **Monthly Master** - Maintain a 30-day streak
+4. 💬 **Chatter** - Send your first 10 messages
+5. 🗣️ **Conversationalist** - Send 100 messages
+6. ⭐ **Popular** - Receive your first 5 upvotes
+7. 💖 **Beloved** - Receive 25 upvotes
+
 ### Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
