@@ -28,7 +28,13 @@ func NewDatabase() (*sql.DB, error) {
 			dbHost, dbPort, dbUser, dbPassword, dbName,
 		)
 		
-		log.Printf("Connecting to local database: %s:%s/%s", dbHost, dbPort, dbName)
+		log.Printf("=== DATABASE CONNECTION (DEVELOPMENT) ===")
+		log.Printf("Environment: %s", env)
+		log.Printf("Connecting to: %s:%s/%s", dbHost, dbPort, dbName)
+		log.Printf("User: %s", dbUser)
+		log.Printf("Full DSN: %s", localDSN)
+		log.Printf("========================================")
+		
 		db, err = sql.Open("pgx", localDSN)
 		if err != nil {
 			log.Fatalf("Failed to open local database: %v", err)
@@ -40,8 +46,10 @@ func NewDatabase() (*sql.DB, error) {
 			log.Fatal("CONNECTION_STRING must be set in production environment")
 		}
 		
-		log.Printf("Connecting to production database with pgx driver")
+		log.Printf("=== DATABASE CONNECTION (PRODUCTION) ===")
+		log.Printf("Environment: %s", env)
 		log.Printf("Connection string length: %d", len(connStr))
+		log.Printf("========================================")
 		
 		db, err = sql.Open("pgx", connStr)
 		if err != nil {

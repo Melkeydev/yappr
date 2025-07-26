@@ -210,12 +210,17 @@ func (h *CoreHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 func (h *CoreHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	log.Printf("=== GetRooms called ===")
+	log.Printf("Environment: %s", util.GetEnv("ENVIRONMENT", "dev"))
+	
 	// Fetch active rooms from database
 	dbRooms, err := h.roomRepo.GetAllActiveRooms(ctx)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, "failed to fetch rooms")
 		return
 	}
+	
+	log.Printf("Fetched %d rooms from database", len(dbRooms))
 
 	rooms := make([]model.RoomRes, 0, len(dbRooms))
 	for _, room := range dbRooms {

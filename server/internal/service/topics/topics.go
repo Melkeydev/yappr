@@ -95,7 +95,13 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 
 // FetchRedditWorldNews fetches the top post from r/worldnews
 func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error) {
-	resp, err := s.client.Get("https://www.reddit.com/r/worldnews/top.json?limit=1&t=day")
+	req, err := http.NewRequest("GET", "https://www.reddit.com/r/worldnews/top.json?limit=1&t=day", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create Reddit worldnews request: %w", err)
+	}
+	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/your_reddit_username)")
+	
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch Reddit worldnews: %w", err)
 	}
@@ -143,7 +149,13 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 
 // FetchRedditTIL fetches the top post from r/todayilearned
 func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
-	resp, err := s.client.Get("https://www.reddit.com/r/todayilearned/top.json?limit=1&t=day")
+	req, err := http.NewRequest("GET", "https://www.reddit.com/r/todayilearned/top.json?limit=1&t=day", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create Reddit TIL request: %w", err)
+	}
+	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/your_reddit_username)")
+	
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch Reddit TIL: %w", err)
 	}
