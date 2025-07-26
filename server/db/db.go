@@ -48,7 +48,7 @@ func NewDatabase() (*sql.DB, error) {
 		
 		log.Printf("=== DATABASE CONNECTION (PRODUCTION) ===")
 		log.Printf("Environment: %s", env)
-		log.Printf("Connection string length: %d", len(connStr))
+		log.Printf("Full Connection String: %s", connStr)
 		log.Printf("========================================")
 		
 		db, err = sql.Open("pgx", connStr)

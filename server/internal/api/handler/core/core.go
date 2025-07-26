@@ -224,6 +224,14 @@ func (h *CoreHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 
 	rooms := make([]model.RoomRes, 0, len(dbRooms))
 	for _, room := range dbRooms {
+		if room.IsPinned {
+			log.Printf("Processing pinned room: %s", room.Name)
+			log.Printf("  DB TopicTitle: %v", room.TopicTitle)
+			log.Printf("  DB TopicDescription: %v", room.TopicDescription)
+			log.Printf("  DB TopicURL: %v", room.TopicURL)
+			log.Printf("  DB TopicSource: %v", room.TopicSource)
+		}
+		
 		rooms = append(rooms, model.RoomRes{
 			ID:               room.ID.String(),
 			Name:             room.Name,

@@ -87,9 +87,9 @@ func (s *TopicService) FetchHackerNewsTop(ctx context.Context) (*Topic, error) {
 		URL:         story.URL,
 		Source:      "HackerNews",
 	}
-	
+
 	fmt.Printf("HackerNews Topic: %+v\n", topic)
-	
+
 	return topic, nil
 }
 
@@ -99,8 +99,8 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 	if err != nil {
 		return nil, fmt.Errorf("create Reddit worldnews request: %w", err)
 	}
-	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/your_reddit_username)")
-	
+	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/melkeydev)")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch Reddit worldnews: %w", err)
@@ -131,7 +131,7 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 
 	post := redditResp.Data.Children[0].Data
 	fmt.Printf("Reddit WorldNews API Response: %+v\n", post)
-	
+
 	// Use Reddit URL for discussion
 	redditURL := "https://reddit.com" + post.Permalink
 
@@ -141,9 +141,9 @@ func (s *TopicService) FetchRedditWorldNews(ctx context.Context) (*Topic, error)
 		URL:         redditURL,
 		Source:      "Reddit WorldNews",
 	}
-	
+
 	fmt.Printf("Reddit WorldNews Topic: %+v\n", topic)
-	
+
 	return topic, nil
 }
 
@@ -153,13 +153,15 @@ func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create Reddit TIL request: %w", err)
 	}
-	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/your_reddit_username)")
-	
+	req.Header.Set("User-Agent", "GoChat/1.0 (by /u/melkeydev)")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch Reddit TIL: %w", err)
 	}
 	defer resp.Body.Close()
+
+	fmt.Println("this is response: ", resp)
 
 	var redditResp struct {
 		Data struct {
@@ -183,16 +185,21 @@ func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
 	}
 
 	post := redditResp.Data.Children[0].Data
-	
+	fmt.Printf("Reddit TIL API Response: %+v\n", post)
+
 	// Use Reddit URL for discussion
 	redditURL := "https://reddit.com" + post.Permalink
 
-	return &Topic{
+	topic := &Topic{
 		Title:       cleanText(post.Title),
 		Description: fmt.Sprintf("Today's top learning with %d upvotes", post.Score),
 		URL:         redditURL,
 		Source:      "Reddit TIL",
-	}, nil
+	}
+
+	fmt.Printf("Reddit TIL Topic: %+v\n", topic)
+
+	return topic, nil
 }
 
 // FetchAllTopics fetches topics from all sources
@@ -246,3 +253,4 @@ func (s *TopicService) FetchAllTopics(ctx context.Context) ([]Topic, error) {
 
 	return topics, nil
 }
+
