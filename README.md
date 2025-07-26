@@ -1,8 +1,13 @@
 <p align="center">
-  <img src="client/public/go-chat-logo.png" alt="Yappr Logo" width="80" height="80">
+  <a href="https://yappr.chat">
+    <img src="client/public/go-chat-logo.png" alt="Yappr Logo" width="80" height="80">
+  </a>
   <h1 align="center"><b>Yappr</b></h1>
 </p>
 <p align="center">Real-time chat rooms that disappear after 24 hours.</p>
+<p align="center">
+  <a href="https://yappr.chat"><b>Visit Yappr →</b></a>
+</p>
 <p align="center">
   <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go" /></a>
   <a href="https://react.dev"><img alt="React" src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react" /></a>
