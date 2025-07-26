@@ -7,12 +7,15 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
 type TopicService struct {
-	client *http.Client
+	client       *http.Client
+	redditToken  string
+	tokenExpiry  time.Time
 }
 
 type Topic struct {
@@ -20,6 +23,12 @@ type Topic struct {
 	Description string
 	URL         string
 	Source      string
+}
+
+type redditTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func NewTopicService() *TopicService {
@@ -39,13 +48,73 @@ func cleanText(text string) string {
 
 const redditUA = "desktop:gochat:1.0 (by /u/melkeydev)" // Reddit's preferred UA format
 
+// getRedditToken fetches a new OAuth token from Reddit
+func (s *TopicService) getRedditToken(ctx context.Context) error {
+	// Get Reddit credentials from environment
+	clientID := os.Getenv("REDDIT_CLIENT_ID")
+	clientSecret := os.Getenv("REDDIT_CLIENT_SECRET")
+	
+	if clientID == "" || clientSecret == "" {
+		return fmt.Errorf("REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET must be set")
+	}
+	
+	// Create token request
+	data := strings.NewReader("grant_type=client_credentials")
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://www.reddit.com/api/v1/access_token", data)
+	if err != nil {
+		return fmt.Errorf("create token request: %w", err)
+	}
+	
+	// Set headers
+	req.SetBasicAuth(clientID, clientSecret)
+	req.Header.Set("User-Agent", redditUA)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	
+	// Make request
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("fetch token: %w", err)
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return fmt.Errorf("reddit token request failed with %d: %s", resp.StatusCode, string(body))
+	}
+	
+	// Parse response
+	var tokenResp redditTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return fmt.Errorf("decode token response: %w", err)
+	}
+	
+	// Store token and expiry
+	s.redditToken = tokenResp.AccessToken
+	s.tokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn-60) * time.Second) // Subtract 60s for safety
+	
+	fmt.Printf("Reddit OAuth token obtained, expires at %v\n", s.tokenExpiry)
+	return nil
+}
+
 func (s *TopicService) getRedditJSON(ctx context.Context, url string, out any) error {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	// Check if we need a new token
+	if s.redditToken == "" || time.Now().After(s.tokenExpiry) {
+		if err := s.getRedditToken(ctx); err != nil {
+			return fmt.Errorf("get reddit token: %w", err)
+		}
+	}
+	
+	// Use OAuth endpoint instead of public API
+	// Convert public URL to OAuth URL
+	oauthURL := strings.Replace(url, "https://www.reddit.com/", "https://oauth.reddit.com/", 1)
+	
+	req, err := http.NewRequestWithContext(ctx, "GET", oauthURL, nil)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
 	req.Header.Set("User-Agent", redditUA)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.redditToken)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -55,7 +124,7 @@ func (s *TopicService) getRedditJSON(ctx context.Context, url string, out any) e
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
-		return fmt.Errorf("reddit %s -> %d: %s", url, resp.StatusCode, strings.TrimSpace(string(body)))
+		return fmt.Errorf("reddit %s -> %d: %s", oauthURL, resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
@@ -173,15 +242,12 @@ func (s *TopicService) FetchRedditTIL(ctx context.Context) (*Topic, error) {
 	}, nil
 }
 
-// FetchAllTopics fetches topics from all sources
 func (s *TopicService) FetchAllTopics(ctx context.Context) ([]Topic, error) {
 	topics := make([]Topic, 0, 3)
 
-	// Fetch HackerNews
 	hnTopic, err := s.FetchHackerNewsTop(ctx)
 	if err != nil {
 		fmt.Printf("Error fetching HackerNews topic: %v\n", err)
-		// Use fallback topic
 		topics = append(topics, Topic{
 			Title:       "Tech News Discussion",
 			Description: "Discuss today's technology news",
