@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
-import { getUserProfile, giveUpvote, type UserProfile as UserProfileType, type Achievement } from '../api/stats';
-import { useToast } from '../context/ToastContext';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from "react";
+import {
+  getUserProfile,
+  giveUpvote,
+  type UserProfile as UserProfileType,
+  type Achievement,
+} from "../api/stats";
+import { useToast } from "../context/ToastContext";
+import { useAuth } from "../context/AuthContext";
 
 interface UserProfileModalProps {
   userId: string;
@@ -10,7 +15,12 @@ interface UserProfileModalProps {
   onClose: () => void;
 }
 
-export default function UserProfileModal({ userId, username, isOpen, onClose }: UserProfileModalProps) {
+export default function UserProfileModal({
+  userId,
+  username,
+  isOpen,
+  onClose,
+}: UserProfileModalProps) {
   const [profile, setProfile] = useState<UserProfileType | null>(null);
   const [loading, setLoading] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
@@ -29,8 +39,7 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
       const profileData = await getUserProfile(userId);
       setProfile(profileData);
     } catch (error: any) {
-      console.error('Failed to load profile:', error);
-      showToast('Failed to load user profile', 'error');
+      showToast("Failed to load user profile", "error");
     } finally {
       setLoading(false);
     }
@@ -38,22 +47,23 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
 
   const handleUpvote = async () => {
     if (!profile || upvoting) return;
-    
+
     try {
       setUpvoting(true);
       await giveUpvote(userId);
-      showToast(`Upvoted ${username}!`, 'success');
-      
-      // Refresh profile to update counts and button state
+      showToast(`Upvoted ${username}!`, "success");
+
       await loadProfile();
     } catch (error: any) {
-      console.error('Failed to upvote:', error);
       if (error.response?.status === 400) {
-        showToast("Cannot upvote yourself", 'warning');
+        showToast("Cannot upvote yourself", "warning");
       } else if (error.response?.status === 409) {
-        showToast("You've already upvoted this user or used your daily upvote", 'warning');
+        showToast(
+          "You've already upvoted this user or used your daily upvote",
+          "warning",
+        );
       } else {
-        showToast('Failed to upvote user', 'error');
+        showToast("Failed to upvote user", "error");
       }
     } finally {
       setUpvoting(false);
@@ -70,8 +80,18 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
@@ -90,25 +110,33 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-indigo-600">{profile.daily_streak}</div>
+                <div className="text-2xl font-bold text-indigo-600">
+                  {profile.daily_streak}
+                </div>
                 <div className="text-sm text-gray-600">Daily Streak</div>
                 <div className="text-xs text-gray-500 mt-1">🔥</div>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{profile.total_checkins}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {profile.total_checkins}
+                </div>
                 <div className="text-sm text-gray-600">Check-ins</div>
                 <div className="text-xs text-gray-500 mt-1">📅</div>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">{profile.total_messages}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {profile.total_messages}
+                </div>
                 <div className="text-sm text-gray-600">Messages</div>
                 <div className="text-xs text-gray-500 mt-1">💬</div>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-600">{profile.total_upvotes_received}</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {profile.total_upvotes_received}
+                </div>
                 <div className="text-sm text-gray-600">Upvotes</div>
                 <div className="text-xs text-gray-500 mt-1">⭐</div>
               </div>
@@ -117,7 +145,9 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
             {/* Achievements Section */}
             {profile.achievements && profile.achievements.length > 0 && (
               <div className="pt-4 border-t">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">🏆 Achievements</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  🏆 Achievements
+                </h3>
                 <div className="grid grid-cols-1 gap-2">
                   {profile.achievements.map((achievement) => (
                     <div
@@ -126,11 +156,18 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
                     >
                       <span className="text-2xl">{achievement.icon}</span>
                       <div className="flex-1">
-                        <div className="font-semibold text-amber-900">{achievement.name}</div>
-                        <div className="text-sm text-amber-700">{achievement.description}</div>
+                        <div className="font-semibold text-amber-900">
+                          {achievement.name}
+                        </div>
+                        <div className="text-sm text-amber-700">
+                          {achievement.description}
+                        </div>
                         {achievement.earned_at && (
                           <div className="text-xs text-amber-600 mt-1">
-                            Earned: {new Date(achievement.earned_at).toLocaleDateString()}
+                            Earned:{" "}
+                            {new Date(
+                              achievement.earned_at,
+                            ).toLocaleDateString()}
                           </div>
                         )}
                       </div>
@@ -167,10 +204,9 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
             {user && !user.guest && !profile.can_receive_upvote && (
               <div className="pt-4 border-t">
                 <div className="text-center text-sm text-gray-500 bg-gray-50 rounded-lg py-3">
-                  {userId === user.id ? 
-                    "You cannot upvote yourself" : 
-                    "Already upvoted or used daily upvote"
-                  }
+                  {userId === user.id
+                    ? "You cannot upvote yourself"
+                    : "Already upvoted or used daily upvote"}
                 </div>
               </div>
             )}
@@ -192,3 +228,4 @@ export default function UserProfileModal({ userId, username, isOpen, onClose }: 
     </div>
   );
 }
+

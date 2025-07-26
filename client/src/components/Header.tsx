@@ -9,13 +9,14 @@ export default function Header() {
 
   async function handleLogout() {
     try {
-      await logout(); // clears cookie + localStorage
+      await logout();
       showToast("Logged out successfully", "success");
       navigate("/login", { replace: true });
     } catch (error: any) {
-      console.error("Logout error:", error);
-      showToast("Failed to logout properly. Please clear your browser data if issues persist.", "warning");
-      // Still navigate even if logout failed
+      showToast(
+        "Failed to logout properly. Please clear your browser data if issues persist.",
+        "warning",
+      );
       navigate("/login", { replace: true });
     }
   }
@@ -23,14 +24,20 @@ export default function Header() {
   return (
     <header className="h-14 flex items-center justify-between px-4 bg-white shadow">
       <div className="flex items-center gap-6">
-        <Link to="/rooms" className="flex items-center hover:opacity-80 transition-opacity">
-          <img 
-            src="/favicon-32x32.png" 
-            alt="Chat App Logo" 
+        <Link
+          to="/rooms"
+          className="flex items-center hover:opacity-80 transition-opacity"
+        >
+          <img
+            src="/favicon-32x32.png"
+            alt="Chat App Logo"
             className="h-8 w-8"
           />
         </Link>
-        <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        <Link
+          to="/about"
+          className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
           About
         </Link>
       </div>

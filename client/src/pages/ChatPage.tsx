@@ -14,24 +14,24 @@ export default function ChatPage() {
   const { messages, sendMessage } = useChatSocket(roomId);
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState<any>(null);
-  const [profileModal, setProfileModal] = useState<{userId: string, username: string} | null>(null);
+  const [profileModal, setProfileModal] = useState<{
+    userId: string;
+    username: string;
+  } | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const { showToast } = useToast();
 
-  /* scroll to newest */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  /* fetch room info for topic */
   useEffect(() => {
     async function loadRoomInfo() {
       try {
         const rooms = await fetchRooms();
-        const room = rooms.find(r => r.id === roomId);
+        const room = rooms.find((r) => r.id === roomId);
         setRoomInfo(room);
       } catch (error) {
-        console.error("Failed to load room info:", error);
         showToast("Failed to load room information", "warning");
       }
     }
@@ -44,12 +44,11 @@ export default function ChatPage() {
       showToast("Please enter a message", "warning");
       return;
     }
-    
+
     try {
       sendMessage(text);
       setInput("");
     } catch (error) {
-      console.error("Failed to send message:", error);
       showToast("Failed to send message. Please try again.", "error");
     }
   }
@@ -75,10 +74,16 @@ export default function ChatPage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h2 className="font-semibold text-lg">{roomInfo.name} - Today's Topic</h2>
-                <p className="text-sm mt-1 opacity-90">{roomInfo.topic_title}</p>
+                <h2 className="font-semibold text-lg">
+                  {roomInfo.name} - Today's Topic
+                </h2>
+                <p className="text-sm mt-1 opacity-90">
+                  {roomInfo.topic_title}
+                </p>
                 {roomInfo.topic_description && (
-                  <p className="text-xs mt-1 opacity-75">{roomInfo.topic_description}</p>
+                  <p className="text-xs mt-1 opacity-75">
+                    {roomInfo.topic_description}
+                  </p>
                 )}
               </div>
               {roomInfo.topic_url && (
@@ -137,7 +142,7 @@ export default function ChatPage() {
           Send
         </button>
       </div>
-      
+
       {/* User Profile Modal */}
       {profileModal && (
         <UserProfileModal

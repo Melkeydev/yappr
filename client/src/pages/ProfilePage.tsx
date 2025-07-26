@@ -13,7 +13,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const { showToast } = useToast();
-  
+
   const {
     register,
     handleSubmit,
@@ -32,29 +32,32 @@ export default function ProfilePage() {
 
   async function onSubmit(values: UsernameForm) {
     try {
-      const { data } = await api.put("/api/users/username", { username: values.username });
-      
-      // Update user in context and localStorage
+      const { data } = await api.put("/api/users/username", {
+        username: values.username,
+      });
+
       const updatedUser = { ...user, username: data.username };
       setUser(updatedUser);
       localStorage.setItem("chat_user", JSON.stringify(updatedUser));
-      
+
       setIsEditing(false);
       showToast("Username updated successfully!", "success");
     } catch (error: any) {
-      console.error("Failed to update username:", error);
-      
       let errorMessage = "Failed to update username";
       if (error.response?.status === 409) {
         errorMessage = "Username already taken. Please choose another.";
-      } else if (error.response?.status === 400 && error.response?.data?.error?.includes("inappropriate content")) {
-        errorMessage = "Username contains inappropriate content. Please choose a different username.";
+      } else if (
+        error.response?.status === 400 &&
+        error.response?.data?.error?.includes("inappropriate content")
+      ) {
+        errorMessage =
+          "Username contains inappropriate content. Please choose a different username.";
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.request) {
         errorMessage = "Cannot reach server. Please check your connection.";
       }
-      
+
       showToast(errorMessage, "error");
     }
   }
@@ -79,7 +82,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Username
               </label>
-              
+
               {!isEditing ? (
                 <div className="flex items-center gap-4">
                   <p className="text-gray-900">{user.username}</p>
@@ -95,28 +98,31 @@ export default function ProfilePage() {
                   <div>
                     <input
                       type="text"
-                      {...register("username", { 
+                      {...register("username", {
                         required: "Username is required",
                         minLength: {
                           value: 3,
-                          message: "Username must be at least 3 characters"
+                          message: "Username must be at least 3 characters",
                         },
                         maxLength: {
                           value: 20,
-                          message: "Username must be less than 20 characters"
+                          message: "Username must be less than 20 characters",
                         },
                         pattern: {
                           value: /^[a-zA-Z0-9_]+$/,
-                          message: "Username can only contain letters, numbers, and underscores"
-                        }
+                          message:
+                            "Username can only contain letters, numbers, and underscores",
+                        },
                       })}
                       className="block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     {errors.username && (
-                      <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.username.message}
+                      </p>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <button
                       type="submit"
@@ -154,3 +160,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

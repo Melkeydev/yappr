@@ -5,7 +5,12 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useState, useEffect } from "react";
 
-type Inputs = { username: string; email: string; password: string; confirmPassword: string };
+type Inputs = {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -30,35 +35,38 @@ export default function SignupPage() {
   async function onSubmit(values: Inputs) {
     setSubmitError("");
     try {
-      console.log("Attempting signup with:", { username: values.username, email: values.email });
       const user = await signup(values.username, values.email, values.password);
-      console.log("Signup successful:", user);
       setUser(user);
       localStorage.setItem("chat_user", JSON.stringify(user));
-      showToast(`Welcome, ${user.username}! Account created successfully.`, "success");
+      showToast(
+        `Welcome, ${user.username}! Account created successfully.`,
+        "success",
+      );
       navigate("/rooms", { replace: true });
     } catch (error: any) {
-      console.error("Signup error:", error);
       let errorMessage = "Signup failed";
-      
+
       if (error.response) {
         // Server responded with error status
-        if (error.response.status === 400 && error.response.data?.error?.includes("inappropriate content")) {
-          errorMessage = "Username contains inappropriate content. Please choose a different username.";
+        if (
+          error.response.status === 400 &&
+          error.response.data?.error?.includes("inappropriate content")
+        ) {
+          errorMessage =
+            "Username contains inappropriate content. Please choose a different username.";
         } else {
-          errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+          errorMessage =
+            error.response.data?.error ||
+            `Server error: ${error.response.status}`;
         }
-        console.error("Server response:", error.response.data);
       } else if (error.request) {
         // Request was made but no response received (network issues, CORS, etc.)
         errorMessage = "Cannot reach server. Please check your connection.";
-        console.error("Network error:", error.request);
       } else {
         // Something else happened
         errorMessage = error.message || "An unexpected error occurred";
-        console.error("Unexpected error:", error.message);
       }
-      
+
       setSubmitError(errorMessage);
     }
   }
@@ -74,32 +82,35 @@ export default function SignupPage() {
               {submitError}
             </div>
           )}
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Username
             </label>
             <input
               type="text"
-              {...register("username", { 
+              {...register("username", {
                 required: "Username is required",
                 minLength: {
                   value: 3,
-                  message: "Username must be at least 3 characters"
+                  message: "Username must be at least 3 characters",
                 },
                 maxLength: {
                   value: 20,
-                  message: "Username must be less than 20 characters"
+                  message: "Username must be less than 20 characters",
                 },
                 pattern: {
                   value: /^[a-zA-Z0-9_]+$/,
-                  message: "Username can only contain letters, numbers, and underscores"
-                }
+                  message:
+                    "Username can only contain letters, numbers, and underscores",
+                },
               })}
               className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.username && (
-              <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {errors.username.message}
+              </p>
             )}
           </div>
 
@@ -109,17 +120,19 @@ export default function SignupPage() {
             </label>
             <input
               type="email"
-              {...register("email", { 
+              {...register("email", {
                 required: "Email is required",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address"
-                }
+                  message: "Invalid email address",
+                },
               })}
               className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.email && (
-              <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
@@ -129,17 +142,19 @@ export default function SignupPage() {
             </label>
             <input
               type="password"
-              {...register("password", { 
+              {...register("password", {
                 required: "Password is required",
                 minLength: {
                   value: 6,
-                  message: "Password must be at least 6 characters"
-                }
+                  message: "Password must be at least 6 characters",
+                },
               })}
               className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.password && (
-              <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -149,14 +164,17 @@ export default function SignupPage() {
             </label>
             <input
               type="password"
-              {...register("confirmPassword", { 
+              {...register("confirmPassword", {
                 required: "Please confirm your password",
-                validate: value => value === watch('password') || "Passwords don't match"
+                validate: (value) =>
+                  value === watch("password") || "Passwords don't match",
               })}
               className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
             {errors.confirmPassword && (
-              <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
@@ -175,7 +193,7 @@ export default function SignupPage() {
             Log in
           </Link>
         </p>
-        
+
         <div className="mt-4 text-center space-y-2">
           <p className="text-xs text-gray-500">
             <Link to="/about" className="hover:text-gray-700 transition-colors">
@@ -186,7 +204,10 @@ export default function SignupPage() {
             <Link to="/terms" className="hover:text-gray-600 transition-colors">
               Terms
             </Link>
-            <Link to="/privacy" className="hover:text-gray-600 transition-colors">
+            <Link
+              to="/privacy"
+              className="hover:text-gray-600 transition-colors"
+            >
               Privacy
             </Link>
           </div>
@@ -198,3 +219,4 @@ export default function SignupPage() {
     </div>
   );
 }
+

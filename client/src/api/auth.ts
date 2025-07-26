@@ -3,8 +3,6 @@ import axios from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://server.yappr.chat";
 
-console.log(API_BASE_URL, "this is base URL");
-
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -13,26 +11,18 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    console.log(
-      `Making ${config.method?.toUpperCase()} request to ${config.url}`,
-    );
-    console.log(`Full URL will be: ${config.baseURL}${config.url}`);
-    console.log(`Config:`, { baseURL: config.baseURL, url: config.url });
     return config;
   },
   (error) => {
-    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   },
 );
 
 api.interceptors.response.use(
   (response) => {
-    console.log(`Response from ${response.config.url}:`, response.status);
     return response;
   },
   (error) => {
-    console.error("Response interceptor error:", error);
     return Promise.reject(error);
   },
 );

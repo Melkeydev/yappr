@@ -10,8 +10,6 @@ export type ChatMessage = {
 };
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "wss://server.yappr.chat";
-console.log("this is WS_URL: ", WS_URL);
-console.log("this is L: ", import.meta.env.VITE_WEBSOCKET_URL);
 
 export default function useChatSocket(roomId: string) {
   const { user } = useAuth();
@@ -41,9 +39,7 @@ export default function useChatSocket(roomId: string) {
       };
 
       ws.onclose = (event) => {
-        // Check if it's a normal close with error status
         if (event.code === 1008 || event.code === 1003) {
-          // Room doesn't exist or expired
           alert(
             "This room has expired or doesn't exist. Redirecting to room list...",
           );
@@ -57,7 +53,7 @@ export default function useChatSocket(roomId: string) {
         }
       };
 
-      ws.onerror = () => ws.close(); // close triggers retry
+      ws.onerror = () => ws.close();
       wsRef.current = ws;
     }
 
