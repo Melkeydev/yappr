@@ -11,16 +11,25 @@ export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [newName, setNewName] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showToast } = useToast();
 
   useEffect(() => {
     refresh();
-    if (user && !user.guest) {
+    if (user && !user.guest && !hasCheckedIn) {
       handleDailyCheckin();
+      setHasCheckedIn(true);
+      // Show helpful toast for new users
+      const hasCreatedRoom = localStorage.getItem('hasCreatedRoom');
+      if (!hasCreatedRoom) {
+        setTimeout(() => {
+          showToast("💡 Create your own room to start chatting!", "info", 8000);
+        }, 2000);
+      }
     }
-  }, [user]);
+  }, [user, hasCheckedIn]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,6 +86,7 @@ export default function RoomsPage() {
       const room = await createRoom(newName.trim());
       setNewName("");
       showToast(`Room "${room.name}" created successfully!`, "success");
+      localStorage.setItem('hasCreatedRoom', 'true');
       await refresh();
     } catch (error: any) {
       if (error.response?.status === 429) {
@@ -120,14 +130,15 @@ export default function RoomsPage() {
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="New room name"
-              className="flex-1 rounded-md border-gray-300 px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter your room name..."
+              className="flex-1 rounded-lg border-2 border-indigo-300 px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 hover:border-indigo-400 transition-colors text-gray-700 placeholder-gray-400"
+              onKeyPress={(e) => e.key === 'Enter' && handleCreate()}
             />
             <button
               onClick={handleCreate}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
+              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all"
             >
-              Create
+              Create Room
             </button>
           </div>
         )}
