@@ -15,11 +15,11 @@ type Room struct {
 	Name             string             `json:"name"`
 	Clients          map[string]*Client `json:"clients"`
 	History          []*Message
-	IsPinned         bool               `json:"is_pinned"`
-	TopicTitle       *string            `json:"topic_title,omitempty"`
-	TopicDescription *string            `json:"topic_description,omitempty"`
-	TopicURL         *string            `json:"topic_url,omitempty"`
-	TopicSource      *string            `json:"topic_source,omitempty"`
+	IsPinned         bool    `json:"is_pinned"`
+	TopicTitle       *string `json:"topic_title,omitempty"`
+	TopicDescription *string `json:"topic_description,omitempty"`
+	TopicURL         *string `json:"topic_url,omitempty"`
+	TopicSource      *string `json:"topic_source,omitempty"`
 }
 
 type Core struct {
@@ -57,26 +57,25 @@ func (c *Core) Run() {
 				if _, ok := room.Clients[cl.ID]; !ok {
 					room.Clients[cl.ID] = cl
 				}
-				// Load and replay history from database
 				go func() {
 					roomUUID, err := uuid.Parse(cl.RoomID)
 					if err != nil {
 						log.Printf("Invalid room ID: %v", err)
 						return
 					}
-					
+
 					messages, err := c.roomRepo.GetRoomMessages(context.Background(), roomUUID, 100)
 					if err != nil {
 						log.Printf("Failed to load room messages: %v", err)
 						return
 					}
-					
+
 					for _, msg := range messages {
 						userID := ""
 						if msg.UserID != nil {
 							userID = msg.UserID.String()
 						}
-						
+
 						wsMsg := &Message{
 							Content:  msg.Content,
 							RoomID:   cl.RoomID,
@@ -101,23 +100,21 @@ func (c *Core) Run() {
 		case m := <-c.Broadcast:
 			if room, ok := c.Rooms[m.RoomID]; ok {
 				room.History = append(room.History, m)
-				
-				// Persist message to database
+
 				go func(msg *Message) {
 					roomUUID, err := uuid.Parse(msg.RoomID)
 					if err != nil {
 						log.Printf("Invalid room ID: %v", err)
 						return
 					}
-					
-					// Parse user ID for database storage
+
 					var userID *uuid.UUID
 					if msg.UserID != "" {
 						if parsedUserID, err := uuid.Parse(msg.UserID); err == nil {
 							userID = &parsedUserID
 						}
 					}
-					
+
 					dbMsg := &roomRepo.Message{
 						RoomID:   roomUUID,
 						UserID:   userID,
@@ -125,18 +122,15 @@ func (c *Core) Run() {
 						Content:  msg.Content,
 						IsSystem: msg.System,
 					}
-					
-					// Save message to database
+
 					if _, err := c.roomRepo.CreateMessage(context.Background(), dbMsg); err != nil {
 						log.Printf("Failed to persist message: %v", err)
 					}
-					
-					// Update user stats if user is authenticated
+
 					if userID != nil {
 						if err := c.statsRepo.IncrementMessageCount(context.Background(), *userID); err != nil {
 							log.Printf("Failed to update message count for user %s: %v", userID.String(), err)
 						} else {
-							// Check for new achievements in background
 							go func() {
 								_, err := c.statsRepo.CheckAndAwardAchievements(context.Background(), *userID)
 								if err != nil {
@@ -146,7 +140,7 @@ func (c *Core) Run() {
 						}
 					}
 				}(m)
-				
+
 				for _, cl := range room.Clients {
 					cl.Message <- m
 				}

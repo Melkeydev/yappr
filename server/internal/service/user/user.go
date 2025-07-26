@@ -38,7 +38,6 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 
 	log.Printf("UserService.CreateUser - Starting user creation for: %s", req.Email)
 
-	// Validate input
 	if req.Username == "" || req.Email == "" || req.Password == "" {
 		log.Printf("UserService.CreateUser - Validation failed: missing required fields")
 		return nil, fmt.Errorf("username, email, and password are required")
@@ -72,7 +71,6 @@ func (s *UserService) CreateUser(ctx context.Context, req model.RequestCreateUse
 
 	log.Printf("UserService.CreateUser - User created successfully in database: %s", user.ID.String())
 
-	// Generate JWT token for the new user
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JWTClaims{
 		ID:       user.ID.String(),
 		Username: user.Username,
@@ -106,12 +104,12 @@ func (s *UserService) Login(ctx context.Context, req model.RequestLoginUser) (*m
 		log.Printf("UserService.Login - Database error: %v", err)
 		return nil, fmt.Errorf("failed to authenticate user")
 	}
-	
+
 	if user == nil {
 		log.Printf("UserService.Login - User not found for email: %s", req.Email)
 		return nil, fmt.Errorf("invalid email or password")
 	}
-	
+
 	if user.PasswordHash == nil {
 		log.Printf("UserService.Login - User has no password hash: %s", req.Email)
 		return nil, fmt.Errorf("invalid user account")
@@ -158,13 +156,11 @@ func (s *UserService) UpdateUsername(ctx context.Context, userID string, newUser
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	// Parse user ID
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update username in database
 	user, err := s.userRepo.UpdateUsername(ctx, uid, newUsername)
 	if err != nil {
 		return nil, err

@@ -5,7 +5,6 @@ import (
 	"log"
 )
 
-// Anyone who joins
 type Client struct {
 	Conn     *websocket.Conn
 	Message  chan *Message

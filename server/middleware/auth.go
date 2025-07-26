@@ -11,7 +11,6 @@ import (
 
 func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get token from cookie
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
 			util.WriteError(w, http.StatusUnauthorized, "missing auth token")
@@ -24,7 +23,6 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Parse and validate token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
@@ -43,7 +41,6 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Add user ID to context
 		userID, ok := claims["id"].(string)
 		if !ok {
 			util.WriteError(w, http.StatusUnauthorized, "invalid user ID in token")
@@ -55,19 +52,17 @@ func JWTAuth(next http.Handler) http.Handler {
 	})
 }
 
-// Optional auth - doesn't fail if no token
 func OptionalJWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("OptionalJWTAuth: Processing request to %s", r.URL.Path)
-		
-		// Try to get token from cookie
+
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
 			log.Printf("OptionalJWTAuth: No JWT cookie found: %v", err)
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		if cookie.Value == "" {
 			log.Printf("OptionalJWTAuth: JWT cookie is empty")
 			next.ServeHTTP(w, r)
@@ -76,7 +71,6 @@ func OptionalJWTAuth(next http.Handler) http.Handler {
 
 		log.Printf("OptionalJWTAuth: Found JWT cookie")
 
-		// Parse token if present
 		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				log.Printf("OptionalJWTAuth: Invalid signing method")
@@ -118,4 +112,3 @@ func OptionalJWTAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-

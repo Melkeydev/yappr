@@ -4,10 +4,9 @@ import (
 	"net/http"
 )
 
-// SetSecureCookie sets a cookie with appropriate security settings based on environment
 func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int) {
 	env := GetEnv("ENVIRONMENT", "dev")
-	
+
 	cookie := &http.Cookie{
 		Name:     name,
 		Value:    value,
@@ -33,7 +32,7 @@ func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int) {
 // ClearSecureCookie clears a cookie with appropriate security settings
 func ClearSecureCookie(w http.ResponseWriter, name string) {
 	env := GetEnv("ENVIRONMENT", "dev")
-	
+
 	cookie := &http.Cookie{
 		Name:     name,
 		Value:    "",
@@ -53,3 +52,4 @@ func ClearSecureCookie(w http.ResponseWriter, name string) {
 
 	http.SetCookie(w, cookie)
 }
+

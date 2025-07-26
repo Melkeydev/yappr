@@ -16,7 +16,6 @@ import (
 func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler, statsH *statshandler.StatsHandler) http.Handler {
 	r := chi.NewRouter()
 
-	// Global middleware (order matters!)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
@@ -34,7 +33,7 @@ func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler,
 		u.Post("/signup", userH.CreateUser)
 		u.Post("/login", userH.Login)
 		u.Get("/logout", userH.Logout)
-		
+
 		// Protected routes
 		u.Group(func(r chi.Router) {
 			r.Use(authmiddleware.JWTAuth)
@@ -49,7 +48,7 @@ func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler,
 			r.Post("/checkin", statsH.CheckIn)
 			r.Post("/upvote", statsH.GiveUpvote)
 		})
-		
+
 		// Public routes (with optional auth for viewing permissions)
 		s.Group(func(r chi.Router) {
 			r.Use(authmiddleware.OptionalJWTAuth)
@@ -63,7 +62,7 @@ func SetupRouter(userH *userhandler.UserHandler, coreH *corehandler.CoreHandler,
 			r.Use(authmiddleware.OptionalJWTAuth)
 			r.Post("/createRoom", coreH.CreateRoom)
 		})
-		
+
 		u.Get("/joinRoom/{roomId}", coreH.JoinRoom)
 		u.Get("/getRooms", coreH.GetRooms)
 		u.Get("/getClients/{roomId}", coreH.GetClients)
