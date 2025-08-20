@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 	"log"
 )
@@ -14,11 +16,12 @@ type Client struct {
 }
 
 type Message struct {
-	Content  string `json:"content"`
-	RoomID   string `json:"room_id"`
-	Username string `json:"username"`
-	UserID   string `json:"user_id,omitempty"`
-	System   bool   `json:"system"`
+	Content   string `json:"content"`
+	RoomID    string `json:"room_id"`
+	Username  string `json:"username"`
+	UserID    string `json:"user_id,omitempty"`
+	System    bool   `json:"system"`
+	Timestamp string `json:"timestamp,omitempty"`
 }
 
 func (c *Client) ReadMessage(core *Core) {
@@ -37,10 +40,11 @@ func (c *Client) ReadMessage(core *Core) {
 		}
 
 		msg := &Message{
-			Content:  string(m),
-			RoomID:   c.RoomID,
-			Username: c.Username,
-			UserID:   c.ID,
+			Content:   string(m),
+			RoomID:    c.RoomID,
+			Username:  c.Username,
+			UserID:    c.ID,
+			Timestamp: time.Now().Format("2006-01-02T15:04:05Z07:00"),
 		}
 
 		core.Broadcast <- msg

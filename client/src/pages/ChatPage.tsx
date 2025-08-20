@@ -117,6 +117,7 @@ export default function ChatPage() {
               mine={m.username === user?.username}
               username={m.username}
               userId={m.user_id}
+              timestamp={m.timestamp}
               onUsernameClick={handleUsernameClick}
             />
           </div>

@@ -5,10 +5,17 @@ type Props = {
   mine: boolean;
   username: string;
   userId?: string;
+  timestamp?: string;
   onUsernameClick?: (userId: string, username: string) => void;
 };
 
-export default function MessageBubble({ text, mine, username, userId, onUsernameClick }: Props) {
+export default function MessageBubble({ text, mine, username, userId, timestamp, onUsernameClick }: Props) {
+  const formatTime = (timestamp?: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div
       className={clsx(
@@ -33,6 +40,14 @@ export default function MessageBubble({ text, mine, username, userId, onUsername
         </p>
       )}
       <p className="whitespace-pre-wrap break-words">{text}</p>
+      {timestamp && (
+        <p className={clsx(
+          "text-xs mt-1",
+          mine ? "text-indigo-200" : "text-gray-500"
+        )}>
+          {formatTime(timestamp)}
+        </p>
+      )}
     </div>
   );
 }

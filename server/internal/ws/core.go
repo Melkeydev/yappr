@@ -77,11 +77,12 @@ func (c *Core) Run() {
 						}
 
 						wsMsg := &Message{
-							Content:  msg.Content,
-							RoomID:   cl.RoomID,
-							Username: msg.Username,
-							UserID:   userID,
-							System:   msg.IsSystem,
+							Content:   msg.Content,
+							RoomID:    cl.RoomID,
+							Username:  msg.Username,
+							UserID:    userID,
+							System:    msg.IsSystem,
+							Timestamp: msg.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 						}
 						cl.Message <- wsMsg
 					}

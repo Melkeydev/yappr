@@ -7,6 +7,7 @@ export type ChatMessage = {
   room_id: string;
   username: string;
   user_id?: string;
+  timestamp?: string;
 };
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_URL || "wss://server.yappr.chat";
